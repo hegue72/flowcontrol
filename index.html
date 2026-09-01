@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>流管作業時間計算系統</title>
   <style>
+    /* 需求 1 & 3: 滿版彈性視埠鎖定，防止外層 window 滾動導致凍結視窗失效 */
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden; /* 強制禁止最外層網頁滾動，徹底確保凍結面板不失效 */
+    }
+
     /* 全局樣式設定 */
     * {
       box-sizing: border-box;
@@ -17,28 +24,29 @@
       background-color: #f0f4f8;
       color: #0f172a;
       line-height: 1.4;
-      padding: 10px 2vw;
+      padding: 8px 2vw;
+      display: flex;
+      flex-direction: column;
     }
 
     .container {
       max-width: 1560px;
       margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* 凍結窗格頂部固定區域 */
-    .sticky-top-pane {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background-color: #f0f4f8;
-      padding-bottom: 4px;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      box-shadow: 0 6px 10px -4px rgba(0, 0, 0, 0.1);
+      min-height: 0; /* 供 Flexbox 內部元件自適應縮放 */
+    }
+
+    /* 頂部固定區域 (Flex 靜態鎖定) */
+    .sticky-top-pane {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 2px;
     }
 
     /* A. 頁首區塊 */
@@ -147,7 +155,7 @@
       white-space: nowrap;
     }
 
-    /* 搜尋結果區塊 */
+    /* 搜尋結果區塊 (動態自適應，不推擠最外頁面) */
     .search-result-card {
       background-color: #ffffff;
       border: 2px solid #2563eb;
@@ -180,7 +188,7 @@
     }
 
     .search-result-card .table-responsive {
-      max-height: 140px;
+      max-height: 130px;
     }
 
     .search-result-card .data-table th {
@@ -568,12 +576,20 @@
       gap: 4px;
     }
 
-    /* 表格區域與固定標頭 */
+    /* 主工作表容器 (Flex 1, 內部滾動) */
+    main#worksheetView, section#listView, section#historyView {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
     .table-responsive {
+      flex: 1;
+      min-height: 0;
       width: 100%;
       overflow-x: auto;
       overflow-y: auto;
-      max-height: calc(100dvh - 240px);
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       background-color: #ffffff;
@@ -623,17 +639,17 @@
       background-color: #fef08a !important;
     }
 
-    /* 選中列指示：黃色背景＋「順序」欄位 6px 鮮藍指示條 */
+    /* 需求 2: 無粗藍框，鮮藍色專屬指示條移至「順序」欄位 (第 2 個 td) */
     .data-table tr:focus-within {
       position: relative;
       z-index: 20;
     }
     .data-table tr:focus-within td {
-      background-color: #fef08a !important;
+      background-color: #fef08a !important; /* 醒目黃色指示 */
       color: #0f172a !important;
     }
     .data-table tr:focus-within td:nth-child(2) {
-      border-left: 6px solid #2563eb !important;
+      border-left: 6px solid #2563eb !important; /* 鮮藍指示條 */
     }
 
     .callsign-cell-wrapper {
@@ -737,7 +753,7 @@
       color: #1e40af;
     }
 
-    /* 呼號專屬獨立全域懸浮快捷名片 */
+    /* 呼號專屬懸浮快捷名片 */
     .callsign-shortcut-popover {
       position: absolute;
       top: calc(100% + 4px);
@@ -1564,7 +1580,7 @@
       handleHeaderSearch();
     }
 
-    /* 需求 2 & 需求 3: 單擊跳轉 + 同步觸發數字鍵盤 + 保留搜尋結果列 */
+    /* 單擊跳轉 + 同步觸發數字鍵盤 + 保留搜尋結果列 */
     function handleHeaderSearch() {
       const query = String(document.getElementById('headerSearchInput').value).trim().toUpperCase();
       const btnClear = document.getElementById('btnClearSearch');
@@ -1617,7 +1633,7 @@
             <td><span class="read-only-cell pbt">${m.pbt || ''}</span></td>
           `;
 
-          // 單擊即跳轉（跨平台數字面板相容優化：在 click 同步 context 內直接 focus）
+          // 單擊跳轉 (iOS / Windows 相容數字鍵盤自動彈出)
           tr.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1627,7 +1643,6 @@
             }
             switchType(m.typeId);
 
-            // iOS & Windows 相容：於 User Click 事件中同步觸發 focus()，確保數字面板/鍵盤順暢彈出
             const targetInput = document.getElementById(`atd-input-${m.index}`);
             if (targetInput) {
               targetInput.focus();
@@ -1739,7 +1754,7 @@
       });
     }
 
-    /* 需求 1: 點擊 CAL、EVA、SJX 按鈕帶入後，立即自動關閉懸浮卡片 */
+    /* 點擊 CAL、EVA、SJX 按鈕帶入後，立即關閉懸浮卡片 */
     function setupCallsignPopBtns() {
       const popover = document.getElementById('callsignShortcutPopover');
       if (!popover) return;
@@ -1753,7 +1768,7 @@
           activeInputRef.dispatchEvent(new Event('input', { bubbles: true }));
           activeInputRef.focus();
         }
-        hideCallsignPopover(); // 需求 1: 點選後立即關閉視窗
+        hideCallsignPopover(); // 點選後立即關閉
       };
 
       btns.forEach(btn => {
@@ -2310,6 +2325,18 @@
     }
 
     function setupEventListeners() {
+      /* 需求 2: 點擊畫面非可點選區塊時，自動收起鍵盤並確保頂部凍結無失誤 */
+      const handleGlobalClickToBlur = (e) => {
+        const isInteractive = e.target.closest('input, select, textarea, button, .shortcut-pop-btn, .drag-handle, .modal-card, .search-result-card');
+        if (!isInteractive && document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+          hideCallsignPopover();
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      };
+
+      document.addEventListener('pointerdown', handleGlobalClickToBlur);
+
       const headerSearchInput = document.getElementById('headerSearchInput');
       const btnClearSearch = document.getElementById('btnClearSearch');
 
