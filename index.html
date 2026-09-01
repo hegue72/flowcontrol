@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>流管作業時間計算系統</title>
   <style>
+    /* 全局字號放大 */
+    html {
+      font-size: 115%;
+    }
+
     /* 全局樣式設定 */
     * {
       box-sizing: border-box;
@@ -327,7 +332,6 @@
       transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* 選中的類型字號放大且貼近邊框 */
     .btn-type-sm.active {
       background-color: #1d4ed8;
       color: #ffffff;
@@ -449,7 +453,6 @@
       line-height: 1;
     }
 
-    /* 圈圈數字垂直高度精準校正 */
     .step-num {
       font-size: 1.25em;
       line-height: 1;
@@ -542,7 +545,7 @@
     .input-field.guide-glow-step1 {
       border: 2px solid #2563eb !important;
       background-color: #eff6ff !important;
-      animation: pulseInputStep1 1.2s infinite ease-in-out !important;
+      animation: pulseInputStep1 1.4s infinite ease-in-out !important;
       z-index: 5;
     }
 
@@ -625,14 +628,17 @@
       background-color: #fef08a !important;
     }
 
-    /* 需求 2: 移除粗藍框，並將 6px 鮮藍色專屬指示條移至順序欄位 (第 2 個 td) */
+    /* 需求 3: 移除粗藍框，並將 6px 鮮藍色指示條移至「順序」欄位 (nth-child(2)) */
+    .data-table tr:focus-within {
+      position: relative;
+      z-index: 20; /* 確保選中列高於其他列 */
+    }
     .data-table tr:focus-within td {
       background-color: #fef08a !important; /* 鮮黃色高亮指示 */
       color: #0f172a !important;
     }
-
     .data-table tr:focus-within td:nth-child(2) {
-      border-left: 6px solid #2563eb !important; /* 鮮藍色專屬指示條 */
+      border-left: 6px solid #2563eb !important;
     }
 
     .callsign-cell-wrapper {
@@ -640,6 +646,7 @@
       align-items: center;
       gap: 6px;
       width: 100%;
+      position: relative; /* 供懸浮快捷名片絕對定位 */
     }
 
     .drag-handle {
@@ -735,9 +742,12 @@
       color: #1e40af;
     }
 
-    /* 需求 1: 呼號專屬獨立全域懸浮快捷名片 (跨平台極致相容，永不失效) */
+    /* 需求 1: 完美修復跨平台防失焦懸浮卡片 (使用 position: absolute，物理綁定呼號欄) */
     .callsign-shortcut-popover {
-      position: fixed;
+      position: absolute;
+      top: calc(100% + 4px); /* 永遠浮在輸入框正下方 */
+      left: 50%;
+      transform: translateX(-50%);
       background-color: #0f2a4a;
       border: 1.5px solid #3b82f6;
       border-radius: 8px;
@@ -745,18 +755,15 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
       z-index: 9999;
-      transition: opacity 0.15s ease, transform 0.15s ease;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
+      transition: opacity 0.15s ease, margin-top 0.15s ease;
     }
 
     .callsign-shortcut-popover.hidden {
       opacity: 0;
       pointer-events: none;
-      transform: translateY(-8px) scale(0.95);
+      margin-top: -8px; /* 內建往上收起的動畫 */
     }
 
     .shortcut-pop-btn {
@@ -1147,7 +1154,7 @@
     </section>
   </div>
 
-  <!-- 需求 1: 呼號專屬獨立全域懸浮快捷名片 (獨立於 tbody 之外，絕不被 DOM 銷毀) -->
+  <!-- 需求 1: 全域獨立呼號快捷懸浮名片 (絕不被 DOM 刪除，永遠相容 iOS/Android 虛擬鍵盤) -->
   <div id="callsignShortcutPopover" class="callsign-shortcut-popover hidden">
     <button class="shortcut-pop-btn" type="button">CAL</button>
     <button class="shortcut-pop-btn" type="button">EVA</button>
@@ -1562,7 +1569,7 @@
       handleHeaderSearch();
     }
 
-    /* 需求 3: 點擊搜尋結果，單擊即跳轉至對應工作表 ATD 欄位，且保持搜尋結果不被清空 */
+    /* 需求 3: 點擊搜尋結果單擊即跳轉至對應工作表 ATD 欄位，且保持搜尋結果不被清空 */
     function handleHeaderSearch() {
       const query = String(document.getElementById('headerSearchInput').value).trim().toUpperCase();
       const btnClear = document.getElementById('btnClearSearch');
@@ -1615,7 +1622,7 @@
             <td><span class="read-only-cell pbt">${m.pbt || ''}</span></td>
           `;
 
-          // 單擊跳轉 (不關閉、不清空搜尋列結果卡片)
+          // 單擊即跳轉，不清空畫面
           tr.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1705,36 +1712,24 @@
       });
     }
 
-    /* 需求 1: 全域精確定位與顯示/隱藏懸浮快捷名片 (獨立 fixed 定位，不受重新渲染刪除) */
+    /* 需求 1: 全域精確定位與顯示/隱藏懸浮快捷名片 (獨立 absolute 定位，不受重新渲染刪除) */
     function showCallsignPopover(inputEl) {
       activeInputRef = inputEl;
       const popover = document.getElementById('callsignShortcutPopover');
       if (!popover || !inputEl) return;
 
-      const rect = inputEl.getBoundingClientRect();
-      popover.style.top = (rect.bottom + 4) + 'px';
-      popover.style.left = (rect.left + rect.width / 2) + 'px';
-      popover.style.transform = 'translateX(-50%)';
-      popover.classList.remove('hidden');
+      // 使用原生 Absolute 貼合 input 所在的 wrapper
+      const wrapper = inputEl.closest('.callsign-cell-wrapper');
+      if (wrapper) {
+        wrapper.appendChild(popover);
+        popover.classList.remove('hidden');
+      }
     }
 
     function hideCallsignPopover() {
       const popover = document.getElementById('callsignShortcutPopover');
       if (popover) {
         popover.classList.add('hidden');
-      }
-    }
-
-    function updatePopoverPosition() {
-      const popover = document.getElementById('callsignShortcutPopover');
-      if (popover && !popover.classList.contains('hidden') && activeInputRef) {
-        const rect = activeInputRef.getBoundingClientRect();
-        if (rect.bottom < 0 || rect.top > window.innerHeight) {
-          hideCallsignPopover();
-        } else {
-          popover.style.top = (rect.bottom + 4) + 'px';
-          popover.style.left = (rect.left + rect.width / 2) + 'px';
-        }
       }
     }
 
@@ -1786,15 +1781,18 @@
           setTimeout(() => { isShortcutInteracting = false; }, 200);
         });
       });
-
-      // 滾動時自動調整位置
-      document.addEventListener('scroll', updatePopoverPosition, true);
-      window.addEventListener('resize', updatePopoverPosition);
     }
 
     function renderWorksheet() {
       const currentType = appState.types.find(t => t.id === appState.activeTypeId);
       if (!currentType) return;
+
+      // 重新渲染表格前，必須先把 popover 拔出來保存，以免被 tbody.innerHTML = '' 殺掉
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (popover) {
+        popover.classList.add('hidden');
+        document.body.appendChild(popover);
+      }
 
       const minsInput = document.getElementById('inputMinutes');
       minsInput.value = currentType.minutes;
@@ -1880,7 +1878,7 @@
           handleHeaderSearch();
         };
 
-        // 僅綁定呼號欄位觸發獨立懸浮快捷名片
+        // 綁定懸浮卡片
         bindCallsignShortcutPopover(inputCallsign);
 
         wrapper.appendChild(dragHandle);
@@ -1948,7 +1946,7 @@
         const tdAtd = document.createElement('td');
         const inputAtd = document.createElement('input');
         inputAtd.type = 'text';
-        inputAtd.id = `atd-input-${index}`;
+        inputAtd.id = `atd-input-${index}`; // 精確定位 ID
         inputAtd.className = 'table-input';
         inputAtd.maxLength = 4;
         inputAtd.placeholder = 'hhmm';
@@ -2328,9 +2326,6 @@
         headerSearchInput.value = '';
         handleHeaderSearch();
       };
-
-      // 搜尋輸入時自動關閉呼號快捷卡片
-      headerSearchInput.addEventListener('focus', hideCallsignPopover);
 
       const minsInput = document.getElementById('inputMinutes');
       minsInput.addEventListener('focus', hideCallsignPopover);
