@@ -427,7 +427,7 @@
       transition: all 0.2s ease;
     }
 
-    /* 視覺化引導標籤對齊優化 */
+    /* 視覺化引導標籤樣式 */
     .step-pill {
       display: inline-flex;
       align-items: center;
@@ -470,7 +470,7 @@
       color: #ffffff !important;
       border: 1px solid #2563eb !important;
       box-shadow: 0 0 8px rgba(37, 99, 235, 0.5) !important;
-      animation: pulseGlow 1.5s infinite ease-in-out !important;
+      animation: pulseGlowMore 1.2s infinite ease-in-out !important;
     }
 
     .step-pill-2 {
@@ -503,24 +503,33 @@
       display: none !important;
     }
 
-    @keyframes pulseGlow {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-      100% { transform: scale(1); }
+    @keyframes pulseGlowMore {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
+      }
+      50% {
+        transform: scale(1.12);
+        box-shadow: 0 0 18px rgba(37, 99, 235, 0.85), 0 0 0 4px rgba(37, 99, 235, 0.3);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
+      }
     }
 
     @keyframes pulseInputStep1 {
       0% {
         transform: scale(1);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
       }
       50% {
-        transform: scale(1.15);
-        box-shadow: 0 0 14px rgba(37, 99, 235, 0.65);
+        transform: scale(1.12);
+        box-shadow: 0 0 16px rgba(37, 99, 235, 0.75);
       }
       100% {
         transform: scale(1);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
       }
     }
 
@@ -533,7 +542,7 @@
     .input-field.guide-glow-step1 {
       border: 2px solid #2563eb !important;
       background-color: #eff6ff !important;
-      animation: pulseInputStep1 1.4s infinite ease-in-out !important;
+      animation: pulseInputStep1 1.2s infinite ease-in-out !important;
       z-index: 5;
     }
 
@@ -616,8 +625,14 @@
       background-color: #fef08a !important;
     }
 
+    /* 需求 2: 移除粗藍框，並將 6px 鮮藍色專屬指示條移至順序欄位 (第 2 個 td) */
     .data-table tr:focus-within td {
-      background-color: #fef9c3 !important;
+      background-color: #fef08a !important; /* 鮮黃色高亮指示 */
+      color: #0f172a !important;
+    }
+
+    .data-table tr:focus-within td:nth-child(2) {
+      border-left: 6px solid #2563eb !important; /* 鮮藍色專屬指示條 */
     }
 
     .callsign-cell-wrapper {
@@ -720,51 +735,50 @@
       color: #1e40af;
     }
 
-    /* 快捷鍵浮動列 */
-    .shortcut-bar {
+    /* 需求 1: 呼號專屬獨立全域懸浮快捷名片 (跨平台極致相容，永不失效) */
+    .callsign-shortcut-popover {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #0f2a4a;
-      border-top: 2px solid #3b82f6;
+      background-color: #0f2a4a;
+      border: 1.5px solid #3b82f6;
+      border-radius: 8px;
+      padding: 5px 10px;
       display: flex;
-      justify-content: center;
       align-items: center;
-      gap: 16px;
-      padding: 8px 12px;
-      box-shadow: 0 -6px 20px rgba(0,0,0,0.3);
-      z-index: 99999;
-      transition: transform 0.2s ease;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      z-index: 9999;
+      transition: opacity 0.15s ease, transform 0.15s ease;
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
     }
 
-    .shortcut-bar.hidden {
-      transform: translateY(150%);
+    .callsign-shortcut-popover.hidden {
+      opacity: 0;
       pointer-events: none;
+      transform: translateY(-8px) scale(0.95);
     }
 
-    .shortcut-btn {
-      padding: 8px 22px;
-      font-size: 1.15rem;
+    .shortcut-pop-btn {
+      padding: 5px 14px;
+      font-size: 1rem;
       font-weight: 900;
-      background: #ffffff;
-      border: 2px solid #3b82f6;
-      border-radius: 6px;
+      background-color: #ffffff;
       color: #1e40af;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 1.5px solid #93c5fd;
+      border-radius: 6px;
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
       touch-action: manipulation;
+      transition: all 0.12s ease;
     }
-    
-    .shortcut-btn:active, .shortcut-btn:hover {
-      background: #3b82f6;
+
+    .shortcut-pop-btn:hover, .shortcut-pop-btn:active {
+      background-color: #2563eb;
       color: #ffffff;
+      border-color: #2563eb;
     }
 
     /* 歷史紀錄統計卡片 */
@@ -986,7 +1000,7 @@
         </button>
       </div>
 
-      <!-- B. 類型選擇區 (14 個平鋪按鈕) -->
+      <!-- B. 類型選擇區 -->
       <section id="typeSelectionBar" class="type-selection-bar">
         <div class="type-title-badge">類型選擇</div>
         <div id="typeButtonsContainer" class="type-buttons-inline">
@@ -995,7 +1009,7 @@
         <button id="btnAddCustomType" class="btn btn-primary" style="margin-left: auto;" aria-label="新增自訂類型">＋ 新增類型</button>
       </section>
 
-      <!-- C. 類型設定區 (需求 1: 標籤改為 STEP ①，圈圈數字加大垂直對齊) -->
+      <!-- C. 類型設定區 -->
       <section id="settingsBar" class="settings-bar">
         <div class="minutes-input-group">
           <span id="step1Pill" class="step-pill step-pill-1 active-guide">
@@ -1133,11 +1147,11 @@
     </section>
   </div>
 
-  <!-- 智慧航空快捷鍵浮動列 -->
-  <div id="shortcutBar" class="shortcut-bar hidden">
-    <button class="shortcut-btn" type="button">CAL</button>
-    <button class="shortcut-btn" type="button">EVA</button>
-    <button class="shortcut-btn" type="button">SJX</button>
+  <!-- 需求 1: 呼號專屬獨立全域懸浮快捷名片 (獨立於 tbody 之外，絕不被 DOM 銷毀) -->
+  <div id="callsignShortcutPopover" class="callsign-shortcut-popover hidden">
+    <button class="shortcut-pop-btn" type="button">CAL</button>
+    <button class="shortcut-pop-btn" type="button">EVA</button>
+    <button class="shortcut-pop-btn" type="button">SJX</button>
   </div>
 
   <!-- 對話盒 (Modal) -->
@@ -1171,7 +1185,7 @@
     };
 
     let activeInputRef = null;
-    let isTouchOnShortcutBar = false;
+    let isShortcutInteracting = false;
     let draggedRowIndex = null;
 
     function createEmptyRows() {
@@ -1302,7 +1316,6 @@
       }
     }
 
-    /* 需求 1: 更新標籤文字為 STEP ① 與 STEP ②，並放大圈圈數字 */
     function updateVisualGuidanceState() {
       const currentType = appState.types.find(t => t.id === appState.activeTypeId);
       if (!currentType) return;
@@ -1549,6 +1562,7 @@
       handleHeaderSearch();
     }
 
+    /* 需求 3: 點擊搜尋結果，單擊即跳轉至對應工作表 ATD 欄位，且保持搜尋結果不被清空 */
     function handleHeaderSearch() {
       const query = String(document.getElementById('headerSearchInput').value).trim().toUpperCase();
       const btnClear = document.getElementById('btnClearSearch');
@@ -1601,30 +1615,39 @@
             <td><span class="read-only-cell pbt">${m.pbt || ''}</span></td>
           `;
 
-          tr.onclick = () => {
-            document.getElementById('tabWorksheet').click();
+          // 單擊跳轉 (不關閉、不清空搜尋列結果卡片)
+          tr.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (appState.viewMode !== 'worksheet') {
+              document.getElementById('tabWorksheet').click();
+            }
             switchType(m.typeId);
 
-            setTimeout(() => {
-              const targetInput = document.getElementById(`atd-input-${m.index}`);
-              if (targetInput) {
-                const targetRow = targetInput.closest('tr');
-                const tableContainer = targetRow.closest('.table-responsive');
-                
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-                if (tableContainer && targetRow) {
-                  const rowTop = targetRow.offsetTop;
-                  const thHeight = tableContainer.querySelector('th')?.offsetHeight || 38;
-                  tableContainer.scrollTo({
-                    top: Math.max(0, rowTop - thHeight - 6),
-                    behavior: 'smooth'
-                  });
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                const targetInput = document.getElementById(`atd-input-${m.index}`);
+                if (targetInput) {
+                  const targetRow = targetInput.closest('tr');
+                  const tableContainer = targetRow.closest('.table-responsive');
+
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+
+                  if (tableContainer && targetRow) {
+                    const rowTop = targetRow.offsetTop;
+                    const thHeight = tableContainer.querySelector('th')?.offsetHeight || 38;
+                    tableContainer.scrollTo({
+                      top: Math.max(0, rowTop - thHeight - 4),
+                      behavior: 'smooth'
+                    });
+                  }
+
+                  targetInput.focus();
+                  targetInput.select();
                 }
-                
-                targetInput.focus();
-              }
-            }, 120);
+              }, 50);
+            });
           };
 
           searchResultTbody.appendChild(tr);
@@ -1682,68 +1705,91 @@
       });
     }
 
-    function adjustShortcutBarPosition() {
-      const bar = document.getElementById('shortcutBar');
-      if (!bar || bar.classList.contains('hidden')) return;
+    /* 需求 1: 全域精確定位與顯示/隱藏懸浮快捷名片 (獨立 fixed 定位，不受重新渲染刪除) */
+    function showCallsignPopover(inputEl) {
+      activeInputRef = inputEl;
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (!popover || !inputEl) return;
 
-      if (window.visualViewport) {
-        const vv = window.visualViewport;
-        const bottomOffset = window.innerHeight - (vv.height + vv.offsetTop);
-        bar.style.bottom = Math.max(0, Math.round(bottomOffset)) + 'px';
-      } else {
-        bar.style.bottom = '0px';
+      const rect = inputEl.getBoundingClientRect();
+      popover.style.top = (rect.bottom + 4) + 'px';
+      popover.style.left = (rect.left + rect.width / 2) + 'px';
+      popover.style.transform = 'translateX(-50%)';
+      popover.classList.remove('hidden');
+    }
+
+    function hideCallsignPopover() {
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (popover) {
+        popover.classList.add('hidden');
       }
     }
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', adjustShortcutBarPosition);
-      window.visualViewport.addEventListener('scroll', adjustShortcutBarPosition);
+    function updatePopoverPosition() {
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (popover && !popover.classList.contains('hidden') && activeInputRef) {
+        const rect = activeInputRef.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+          hideCallsignPopover();
+        } else {
+          popover.style.top = (rect.bottom + 4) + 'px';
+          popover.style.left = (rect.left + rect.width / 2) + 'px';
+        }
+      }
     }
 
-    function bindShortcutFocus(inputEl) {
-      inputEl.addEventListener('focus', (e) => {
-        activeInputRef = e.target;
-        const bar = document.getElementById('shortcutBar');
-        bar.classList.remove('hidden');
-        adjustShortcutBarPosition();
+    function bindCallsignShortcutPopover(inputEl) {
+      inputEl.addEventListener('focus', () => {
+        showCallsignPopover(inputEl);
       });
 
       inputEl.addEventListener('blur', () => {
         setTimeout(() => {
-          if (document.activeElement !== activeInputRef && !isTouchOnShortcutBar) {
-            const bar = document.getElementById('shortcutBar');
-            bar.classList.add('hidden');
+          if (!isShortcutInteracting && document.activeElement !== activeInputRef) {
+            hideCallsignPopover();
           }
-        }, 200);
+        }, 180);
       });
     }
 
-    function setupShortcutBar() {
-      const bar = document.getElementById('shortcutBar');
-      const btns = document.querySelectorAll('.shortcut-btn');
+    function setupCallsignPopBtns() {
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (!popover) return;
+      const btns = popover.querySelectorAll('.shortcut-pop-btn');
 
-      bar.addEventListener('touchstart', () => { isTouchOnShortcutBar = true; }, {passive: true});
-      bar.addEventListener('touchend', () => { setTimeout(() => { isTouchOnShortcutBar = false; }, 300); }, {passive: true});
-      bar.addEventListener('mousedown', () => { isTouchOnShortcutBar = true; });
-      bar.addEventListener('mouseup', () => { setTimeout(() => { isTouchOnShortcutBar = false; }, 300); });
+      const handleInsert = (e, text) => {
+        e.preventDefault(); // 核心：防失焦
+        if (activeInputRef) {
+          activeInputRef.value += text;
+          activeInputRef.value = activeInputRef.value.toUpperCase();
+          activeInputRef.dispatchEvent(new Event('input', { bubbles: true }));
+          activeInputRef.focus();
+        }
+      };
 
       btns.forEach(btn => {
-        const handler = (e) => {
-          e.preventDefault();
-          if (activeInputRef) {
-            const text = btn.textContent.trim();
-            const val = activeInputRef.value;
-            activeInputRef.value = val + text;
-            activeInputRef.value = activeInputRef.value.toUpperCase();
+        btn.addEventListener('touchstart', (e) => {
+          isShortcutInteracting = true;
+          handleInsert(e, btn.textContent.trim());
+        }, { passive: false });
 
-            activeInputRef.dispatchEvent(new Event('input', { bubbles: true }));
-            activeInputRef.focus();
-          }
-        };
+        btn.addEventListener('mousedown', (e) => {
+          isShortcutInteracting = true;
+          handleInsert(e, btn.textContent.trim());
+        });
 
-        btn.addEventListener('touchstart', handler, { passive: false });
-        btn.addEventListener('mousedown', handler);
+        btn.addEventListener('touchend', () => {
+          setTimeout(() => { isShortcutInteracting = false; }, 200);
+        });
+
+        btn.addEventListener('mouseup', () => {
+          setTimeout(() => { isShortcutInteracting = false; }, 200);
+        });
       });
+
+      // 滾動時自動調整位置
+      document.addEventListener('scroll', updatePopoverPosition, true);
+      window.addEventListener('resize', updatePopoverPosition);
     }
 
     function renderWorksheet() {
@@ -1834,13 +1880,13 @@
           handleHeaderSearch();
         };
 
-        bindShortcutFocus(inputCallsign);
+        // 僅綁定呼號欄位觸發獨立懸浮快捷名片
+        bindCallsignShortcutPopover(inputCallsign);
 
         wrapper.appendChild(dragHandle);
         wrapper.appendChild(inputCallsign);
         tdCallsign.appendChild(wrapper);
 
-        /* 需求 1: STEP 2 標籤改為 STEP ②，並放大圈圈數字 */
         const tdEtd = document.createElement('td');
         if (index === 0) {
           const etd1Container = document.createElement('div');
@@ -2273,20 +2319,6 @@
       modal.classList.add('active');
     }
 
-    function setupShortcutBar() {
-      const btns = document.querySelectorAll('.shortcut-btn');
-      btns.forEach(btn => {
-        btn.onmousedown = (e) => e.preventDefault();
-        btn.ontouchstart = (e) => e.preventDefault();
-        btn.onclick = () => {
-          if (activeInputRef) {
-            activeInputRef.value += btn.textContent;
-            activeInputRef.dispatchEvent(new Event('input'));
-          }
-        };
-      });
-    }
-
     function setupEventListeners() {
       const headerSearchInput = document.getElementById('headerSearchInput');
       const btnClearSearch = document.getElementById('btnClearSearch');
@@ -2297,9 +2329,11 @@
         handleHeaderSearch();
       };
 
-      bindShortcutFocus(headerSearchInput);
+      // 搜尋輸入時自動關閉呼號快捷卡片
+      headerSearchInput.addEventListener('focus', hideCallsignPopover);
 
       const minsInput = document.getElementById('inputMinutes');
+      minsInput.addEventListener('focus', hideCallsignPopover);
       minsInput.oninput = (e) => {
         const val = e.target.value.trim();
         const currentType = appState.types.find(t => t.id === appState.activeTypeId);
@@ -2516,6 +2550,7 @@
       };
 
       tabList.onclick = () => {
+        hideCallsignPopover();
         appState.viewMode = 'list';
         tabList.classList.add('active');
         tabWorksheet.classList.remove('active');
@@ -2530,6 +2565,7 @@
       };
 
       tabHistory.onclick = () => {
+        hideCallsignPopover();
         appState.viewMode = 'history';
         tabHistory.classList.add('active');
         tabWorksheet.classList.remove('active');
@@ -2547,7 +2583,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadData();
       setupEventListeners();
-      setupShortcutBar();
+      setupCallsignPopBtns();
       renderTypeButtons();
       renderWorksheet();
     });
