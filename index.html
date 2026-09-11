@@ -17,7 +17,7 @@
       background-color: #f0f4f8;
       color: #0f172a;
       line-height: 1.4;
-      padding: 10px 2vw;
+      padding: 10px 4vw;
     }
 
     .container {
@@ -26,6 +26,73 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    /* 遊戲教學式 全螢幕暗化背景 */
+    .game-tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.72);
+      z-index: 800;
+      pointer-events: none; /* 允許直接點擊高亮欄位 */
+      transition: opacity 0.3s ease;
+    }
+
+    /* 懸浮提示卡片 (微縮尺寸) */
+    .tutorial-card-pop {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff;
+      padding: 2px 7px;
+      border-radius: 16px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      border: 1.5px solid #fef08a;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+      animation: tutorialCardPulse 1.2s infinite ease-in-out;
+      white-space: nowrap;
+      z-index: 900;
+    }
+
+    .tutorial-card-pop.step1-card {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-color: #93c5fd;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.8);
+    }
+
+    @keyframes tutorialCardPulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+      }
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 16px rgba(239, 68, 68, 1), 0 0 0 3px rgba(254, 240, 138, 0.6);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+      }
+    }
+
+    /* ETD 標題列專用高亮（維持原本顏色，僅超越暗化遮罩而不加藍光） */
+    .highlight-etd-th {
+      position: relative !important;
+      z-index: 860 !important;
+      background-color: #0f2a4a !important; /* 保持深藍標頭原本底色 */
+      color: #ffffff !important;
+      box-shadow: none !important; /* 移除藍色發光 */
+    }
+
+    /* 需求 2: STEP 2 階段強效高亮列鎖定（防止點擊其他區域時失靈） */
+    .step2-highlight-row {
+      position: relative !important;
+      z-index: 860 !important;
     }
 
     /* 凍結窗格頂部固定區域 */
@@ -208,43 +275,57 @@
     /* 視圖頁籤 */
     .view-tabs {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       background-color: #ffffff;
-      padding: 4px 6px;
-      border-radius: 6px;
+      padding: 5px 8px;
+      border-radius: 8px;
       border: 1px solid #cbd5e1;
       overflow-x: auto;
     }
 
     .tab-btn {
-      padding: 6px 14px;
+      padding: 6px 16px;
       font-weight: bold;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
       cursor: pointer;
-      color: #64748b;
+      color: #475569;
       font-size: 0.95rem;
       font-family: inherit;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .tab-btn svg {
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
       fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
+      stroke: #64748b;
+      stroke-width: 2.2;
       stroke-linecap: round;
       stroke-linejoin: round;
+      transition: stroke 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
     }
 
     .tab-btn.active {
-      color: #1e40af;
-      border-bottom-color: #1e40af;
+      background-color: #1d4ed8 !important;
+      color: #ffffff !important;
+      border: 1px solid #1d4ed8 !important;
+      box-shadow: 0 4px 10px rgba(29, 78, 216, 0.35) !important;
+      font-weight: 900 !important;
+    }
+
+    .tab-btn.active svg {
+      stroke: #ffffff !important;
     }
 
     /* B. 類型選擇區 */
@@ -255,7 +336,7 @@
       border: 1px solid #cbd5e1;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       position: relative;
     }
 
@@ -273,11 +354,11 @@
     .type-buttons-inline {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 3px;
       overflow-x: auto;
       white-space: nowrap;
       -webkit-overflow-scrolling: touch;
-      padding: 2px 0 6px 0;
+      padding: 2px 0 4px 0;
       flex: 1;
     }
 
@@ -314,30 +395,43 @@
     }
 
     .btn-type-sm {
-      padding: 4px 10px;
-      font-size: 0.9rem;
+      padding: 3px 8px;
+      font-size: 0.88rem;
       font-weight: bold;
       border-radius: 4px;
       border: 1px solid #94a3b8;
       background-color: #f8fafc;
       color: #1e3a8a;
-      min-height: 30px;
+      min-height: 28px;
       position: relative;
-      margin: 0 2px;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      margin: 0 1px;
+      transition: all 0.15s ease;
     }
 
     .btn-type-sm.active {
       background-color: #1d4ed8;
       color: #ffffff;
       border: 1px solid #1d4ed8;
-      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.45);
-      font-size: 1.15rem;
+      box-shadow: 0 4px 10px rgba(29, 78, 216, 0.4);
+      font-size: 1.05rem;
       font-weight: 900;
-      padding: 2px 10px;
-      transform: scale(1.15);
-      margin: 0 6px;
+      padding: 2px 8px;
+      transform: scale(1.1);
+      margin: 0 3px;
       z-index: 10;
+    }
+
+    #btnAddCustomType {
+      background-color: #766D79 !important;
+      border-color: #766D79 !important;
+      color: #ffffff !important;
+      font-size: 0.78rem !important;
+      padding: 3px 8px !important;
+    }
+
+    #btnAddCustomType:hover {
+      background-color: #635a66 !important;
+      border-color: #635a66 !important;
     }
 
     .btn-filter-pill {
@@ -424,6 +518,18 @@
       width: 85px;
       text-align: center;
       transition: all 0.2s ease;
+    }
+
+    #inputMinutes {
+      font-size: 1.25rem !important;
+      font-weight: 900 !important;
+      color: #0f2a4a !important;
+      width: 72px;
+      height: 32px;
+      border: 2px solid #2563eb;
+      background-color: #ffffff !important;
+      letter-spacing: 0.5px;
+      border-radius: 6px;
     }
 
     /* 視覺化引導標籤樣式 */
@@ -522,7 +628,7 @@
         box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
       }
       50% {
-        transform: scale(1.12);
+        transform: scale(1.1);
         box-shadow: 0 0 16px rgba(37, 99, 235, 0.75);
       }
       100% {
@@ -533,21 +639,32 @@
 
     @keyframes intensePulseStep2 {
       0% { transform: scale(1); box-shadow: 0 0 4px rgba(220, 38, 38, 0.6); }
-      50% { transform: scale(1.08); box-shadow: 0 0 14px rgba(220, 38, 38, 1), 0 0 0 4px rgba(245, 158, 11, 0.5); }
+      50% { transform: scale(1.08); box-shadow: 0 0 14px rgba(220, 38, 38, 1), 0 0 0 4px rgba(254, 240, 138, 0.5); }
       100% { transform: scale(1); box-shadow: 0 0 4px rgba(220, 38, 38, 0.6); }
     }
 
     .input-field.guide-glow-step1 {
-      border: 2px solid #2563eb !important;
-      background-color: #eff6ff !important;
+      border: 2.5px solid #2563eb !important;
+      background-color: #ffffff !important;
       animation: pulseInputStep1 1.4s infinite ease-in-out !important;
       z-index: 5;
     }
 
+    /* ETD 時間欄位 (92px x 38px) 並保證純白亮色聚焦 */
+    #inputEtd1 {
+      width: 92px !important;
+      height: 38px !important;
+      font-size: 1.2rem !important;
+      font-weight: 900 !important;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-radius: 6px;
+    }
+
     .table-input.guide-glow-step2 {
       border: 2.5px solid #dc2626 !important;
-      background-color: #fef2f2 !important;
-      box-shadow: 0 0 12px rgba(220, 38, 38, 0.85) !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 16px rgba(220, 38, 38, 0.9) !important;
       animation: intensePulseStep2 1.2s infinite ease-in-out !important;
     }
 
@@ -574,7 +691,7 @@
       overflow-x: auto;
       overflow-y: auto;
       max-height: calc(100dvh - 240px);
-      border: 1px solid #cbd5e1;
+      border: 1px solid #94a3b8;
       border-radius: 6px;
       background-color: #ffffff;
       -webkit-overflow-scrolling: touch;
@@ -585,7 +702,7 @@
       border-collapse: separate;
       border-spacing: 0;
       text-align: center;
-      min-width: 820px;
+      min-width: 780px;
     }
 
     .data-table th {
@@ -599,12 +716,13 @@
       z-index: 10;
       white-space: nowrap !important;
       background-clip: padding-box;
+      border-bottom: 2px solid #64748b;
     }
 
     .data-table td {
       padding: 6px 4px;
-      border-bottom: 1px solid #cbd5e1;
-      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #94a3b8;
+      border-right: 1px solid #94a3b8;
       font-size: 1.1rem;
       font-weight: bold;
       white-space: nowrap !important;
@@ -616,14 +734,14 @@
     }
 
     .data-table tr:nth-child(even) {
-      background-color: #f8fafc;
+      background-color: #e2e8f0;
     }
 
     .data-table tr:hover {
       background-color: #fef08a !important;
     }
 
-    /* 選中列指示：黃色背景＋「順序」欄位 6px 鮮藍指示條 */
+    /* 所選列黃色指示，順序欄位左側加 6px 鮮藍條 */
     .data-table tr:focus-within {
       position: relative;
       z-index: 20;
@@ -737,19 +855,19 @@
       color: #1e40af;
     }
 
-    /* 呼號專屬獨立懸浮快捷名片 */
+    /* 懸浮視窗外框採 #766D79 */
     .callsign-shortcut-popover {
       position: absolute;
       top: calc(100% + 4px);
       left: 50%;
       transform: translateX(-50%);
-      background-color: #0f2a4a;
-      border: 1.5px solid #3b82f6;
-      border-radius: 8px;
-      padding: 5px 10px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #766D79;
+      border-radius: 10px;
+      padding: 5px 8px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
       z-index: 9999;
       transition: opacity 0.15s ease, margin-top 0.15s ease;
@@ -762,12 +880,12 @@
     }
 
     .shortcut-pop-btn {
-      padding: 5px 14px;
-      font-size: 1rem;
+      padding: 5px 12px;
+      font-size: 0.92rem;
       font-weight: 900;
       background-color: #ffffff;
       color: #1e40af;
-      border: 1.5px solid #93c5fd;
+      border: 1.5px solid #766D79;
       border-radius: 6px;
       cursor: pointer;
       user-select: none;
@@ -778,24 +896,24 @@
     }
 
     .shortcut-pop-btn:hover, .shortcut-pop-btn:active {
-      background-color: #2563eb;
+      background-color: #766D79;
       color: #ffffff;
-      border-color: #2563eb;
+      border-color: #766D79;
     }
 
-    /* 需求 1: 歷史紀錄圖表分析 Dashboard 容器 */
+    /* 圖表分析 Dashboard 樣式 */
     .dashboard-charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .chart-card {
       background-color: #f8fafc;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
       display: flex;
       flex-direction: column;
@@ -803,22 +921,101 @@
     }
 
     .chart-title {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: #0f2a4a;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       align-self: flex-start;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .chart-canvas {
       width: 100%;
-      height: 200px;
+      height: 180px;
       background: #ffffff;
       border-radius: 6px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* 排行榜專用卡片與獎牌樣式 */
+    .leaderboard-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .lb-card {
+      background-color: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+    }
+
+    .lb-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    .lb-rank-badge {
+      font-size: 2rem;
+      font-weight: 900;
+      min-width: 46px;
+      text-align: center;
+    }
+
+    .lb-rank-num {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #64748b;
+      min-width: 46px;
+      text-align: center;
+    }
+
+    .lb-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .lb-type-name {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #0f2a4a;
+    }
+
+    .lb-stats-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .lb-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .lb-stat-value {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #1e40af;
+    }
+
+    .lb-stat-label {
+      font-size: 0.78rem;
+      color: #64748b;
+      font-weight: bold;
     }
 
     /* 歷史紀錄統計卡片 */
@@ -873,12 +1070,12 @@
       max-width: 100%;
     }
 
-    /* 需求 2: 班務交接與事件記錄頁面專用樣式 */
+    /* 班務交接與事件記錄專用樣式 */
     .shift-log-form {
       background-color: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      padding: 12px 14px;
+      padding: 12px;
       margin-bottom: 12px;
       display: flex;
       flex-direction: column;
@@ -910,9 +1107,10 @@
 
     .shift-log-card {
       background-color: #ffffff;
-      border-left: 4px solid #1e40af;
-      border: 1px solid #cbd5e1;
-      border-left-width: 5px;
+      border-left: 5px solid #1e40af;
+      border-top: 1px solid #cbd5e1;
+      border-right: 1px solid #cbd5e1;
+      border-bottom: 1px solid #cbd5e1;
       border-radius: 6px;
       padding: 10px 12px;
       margin-bottom: 8px;
@@ -1020,6 +1218,9 @@
 </head>
 <body>
 
+  <!-- 遊戲教學式 全螢幕暗化背景 -->
+  <div id="gameTutorialOverlay" class="game-tutorial-overlay hidden"></div>
+
   <div class="container">
     <div class="sticky-top-pane">
       
@@ -1090,7 +1291,7 @@
         </div>
       </section>
 
-      <!-- 視圖切換頁籤 (需求 2: 新增班務交接頁籤) -->
+      <!-- 視圖頁籤 (更名「紀錄及分析」與新增「排行榜」) -->
       <div class="view-tabs" role="tablist">
         <button id="tabWorksheet" class="tab-btn active" role="tab" aria-selected="true">
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1100,10 +1301,17 @@
           <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           查看各類型列表
         </button>
+
         <button id="tabHistory" class="tab-btn" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-          歷史紀錄與圖表分析
+          紀錄及分析
         </button>
+
+        <button id="tabLeaderboard" class="tab-btn" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24"><path d="M12 15l-2 5l9-11h-7l2-5l-9 11h7z"/></svg>
+          排行榜
+        </button>
+
         <button id="tabShiftLog" class="tab-btn" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           班務交接與事件記錄
@@ -1116,7 +1324,7 @@
         <div id="typeButtonsContainer" class="type-buttons-inline">
           <!-- 動態渲染 14 個類型按鈕 -->
         </div>
-        <button id="btnAddCustomType" class="btn btn-primary" style="margin-left: auto;" aria-label="新增自訂類型">＋ 新增類型</button>
+        <button id="btnAddCustomType" class="btn" aria-label="新增自訂類型">＋ 新增類型</button>
       </section>
 
       <!-- C. 類型設定區 -->
@@ -1129,6 +1337,8 @@
           <label for="inputMinutes" style="margin-left: 2px;">流管時間間隔：</label>
           <input type="text" id="inputMinutes" class="input-field guide-glow-step1" placeholder="整數" aria-label="設定分鐘數" inputmode="numeric" pattern="[0-9]*">
           <span>分鐘</span>
+          <!-- 第一步懸浮指示卡片 -->
+          <span id="step1CardPop" class="tutorial-card-pop step1-card hidden">👈 請先填寫這裡</span>
           <span id="minutesError" class="error-text hidden"></span>
         </div>
 
@@ -1148,12 +1358,12 @@
         <table class="data-table" aria-label="流管時間計算工作表">
           <thead>
             <tr>
-              <th style="width: 6%;">清除</th>
-              <th style="width: 8%;">順序</th>
-              <th style="width: 24%;">呼號 (可拖移換順序)</th>
-              <th style="width: 17%;">ETD</th>
-              <th style="width: 17%;">ATD</th>
-              <th style="width: 18%;" class="nowrap-text">預估後推(ETD-20分)</th>
+              <th style="width: 5%;">清除</th>
+              <th style="width: 7%;">順序</th>
+              <th style="width: 22%;">呼號 (可拖移換順序)</th>
+              <th style="width: 16%;">ETD</th>
+              <th style="width: 16%;">ATD</th>
+              <th style="width: 17%;" class="nowrap-text">預估後推(ETD-20分)</th>
             </tr>
           </thead>
           <tbody id="worksheetTbody">
@@ -1176,10 +1386,10 @@
             <thead>
               <tr>
                 <th style="width: 12%;">類型</th>
-                <th style="width: 24%;">呼號</th>
-                <th style="width: 17%;">ETD</th>
-                <th style="width: 17%;">ATD</th>
-                <th style="width: 18%;" class="nowrap-text">預估後推(ETD-20分)</th>
+                <th style="width: 22%;">呼號</th>
+                <th style="width: 16%;">ETD</th>
+                <th style="width: 16%;">ATD</th>
+                <th style="width: 17%;" class="nowrap-text">預估後推(ETD-20分)</th>
               </tr>
             </thead>
             <tbody id="listTbody">
@@ -1189,14 +1399,13 @@
       </div>
     </section>
 
-    <!-- F. 歷史紀錄與統計分析面板區 (需求 1: 加回圖表分析 Dashboard) -->
+    <!-- F. 紀錄及分析面板區 -->
     <section id="historyView" class="hidden">
-      <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1; overflow-y:auto;">
+      <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1;">
         
-        <!-- 圖表分析儀表板 -->
         <div class="dashboard-charts-grid">
           <div class="chart-card">
-            <div class="chart-title">📊 24 小時航情流量分布圖 (最高流量時段醒目指示)</div>
+            <div class="chart-title">📊 24 小時航情流量分布圖 (最高流量 Peak Hour 橘色指示)</div>
             <canvas id="chartHourlyBar" class="chart-canvas"></canvas>
           </div>
           <div class="chart-card">
@@ -1245,7 +1454,7 @@
           </div>
         </div>
 
-        <div id="historyTableContainer" class="table-responsive" style="max-height: 280px;">
+        <div id="historyTableContainer" class="table-responsive" style="max-height: 240px;">
           <table class="data-table">
             <thead>
               <tr>
@@ -1268,9 +1477,31 @@
       </div>
     </section>
 
-    <!-- G. 班務交接與工作記錄 (需求 2: 全新留言板與事件日誌區) -->
+    <!-- H. 全新需求 3: 排行榜 (Leaderboard) 面板區 -->
+    <section id="leaderboardView" class="hidden">
+      <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1;">
+        
+        <div class="filter-controls-bar" style="justify-content: space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:900; color:#0f2a4a; font-size:1.1rem;">🏆 流管次數與航情壅塞排行榜</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button id="btnLbAll" class="btn-filter-pill active">🏆 歷史總榜</button>
+            <button id="btnLbMonth" class="btn-filter-pill">📅 當月榜</button>
+            <button id="btnLbDay" class="btn-filter-pill">☀️ 當日榜</button>
+          </div>
+        </div>
+
+        <div id="leaderboardListContainer" class="leaderboard-grid">
+          <!-- 動態渲染前三名獎牌與名次清單 -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- G. 班務交接與事件記錄 -->
     <section id="shiftLogView" class="hidden">
-      <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1; overflow-y:auto; flex:1;">
+      <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1;">
         
         <div class="shift-log-form">
           <div class="shift-log-row">
@@ -1286,16 +1517,16 @@
               <option value="other">心得分享/其他</option>
             </select>
 
-            <button id="btnAddShiftLog" class="btn btn-primary" style="margin-left:auto; padding:6px 16px;">＋ 發布記錄</button>
+            <button id="btnAddShiftLog" class="btn btn-primary" style="margin-left:auto; padding:5px 16px;">＋ 發布記錄</button>
           </div>
 
           <div>
-            <textarea id="shiftContentInput" class="input-field" style="width:100%; height:80px; text-align:left; padding:8px; font-size:1rem;" placeholder="請輸入班務交接事項、流管狀況、氣象變化或設備警示..."></textarea>
+            <textarea id="shiftContentInput" class="input-field" style="width:100%; height:75px; text-align:left; padding:8px; font-size:0.95rem;" placeholder="請輸入班務交接事項、流管狀況、氣象變化或設備警示..."></textarea>
           </div>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <h3 style="color:#0f2a4a; font-size:1.1rem;">📝 班務交接與歷史留言歷史清單</h3>
+          <h3 style="color:#0f2a4a; font-size:1.05rem;">📝 班務交接與歷史事件留言清單</h3>
           <button id="btnClearAllShiftLogs" class="btn btn-danger" style="padding:2px 8px; font-size:0.8rem;">清空所有交接紀錄</button>
         </div>
 
@@ -1308,11 +1539,13 @@
 
   </div>
 
-  <!-- 呼號專屬獨立全域懸浮快捷名片 -->
+  <!-- 懸浮視窗外框採 Ship Gray Light Shade 02 顏色 (#766D79) -->
   <div id="callsignShortcutPopover" class="callsign-shortcut-popover hidden">
     <button class="shortcut-pop-btn" type="button">CAL</button>
     <button class="shortcut-pop-btn" type="button">EVA</button>
     <button class="shortcut-pop-btn" type="button">SJX</button>
+    <button class="shortcut-pop-btn" type="button">TTW</button>
+    <button class="shortcut-pop-btn" type="button">CPA</button>
   </div>
 
   <!-- 對話盒 (Modal) -->
@@ -1335,14 +1568,15 @@
     const TOTAL_DATA_ROWS = 50;
 
     let appState = {
-      version: 7,
+      version: 8,
       activeTypeId: 'KPL',
       viewMode: 'worksheet',
       listFilter: 'all',
+      leaderboardFilter: 'all', // all, month, day
       types: [],
       rows: {},
       historyLogs: [],
-      shiftLogs: [], // 新增: 班務交接與留言板記錄
+      shiftLogs: [],
       selectedHistoryTypes: []
     };
 
@@ -1377,10 +1611,11 @@
       });
 
       return {
-        version: 7,
+        version: 8,
         activeTypeId: 'KPL',
         viewMode: 'worksheet',
         listFilter: 'all',
+        leaderboardFilter: 'all',
         types: types,
         rows: rows,
         historyLogs: [],
@@ -1389,11 +1624,12 @@
       };
     }
 
+    /* 需求 2 修正：時間輸入正規化（只有長度為 3 且為數字時才自動補 0，如 800 -> 0800） */
     function normalizeTimeInput(value) {
       if (value === null || value === undefined) return '';
       let str = String(value).trim();
       if (!str) return '';
-      if (/^\d{1,4}$/.test(str)) {
+      if (str.length === 3 && /^\d{3}$/.test(str)) {
         return str.padStart(4, '0');
       }
       return str;
@@ -1479,6 +1715,7 @@
       }
     }
 
+    /* 遊戲教學級 聚光燈暗化與懸浮提示卡片邏輯 (需求 1 & 2 修正) */
     function updateVisualGuidanceState() {
       const currentType = appState.types.find(t => t.id === appState.activeTypeId);
       if (!currentType) return;
@@ -1487,15 +1724,40 @@
       const step1Pill = document.getElementById('step1Pill');
       const step2Pill = document.getElementById('step2Pill');
       const step2Badge = document.getElementById('step2Badge');
+      
+      const overlay = document.getElementById('gameTutorialOverlay');
+      const step1Card = document.getElementById('step1CardPop');
+
       const rows = appState.rows[appState.activeTypeId] || [];
       const row1EtdVal = rows[0] ? rows[0].etd : '';
 
       const isMinsFilled = minsInput.value.trim() !== '' && isValidMinutes(minsInput.value.trim());
-      const isRow1EtdFilled = isValidTime(row1EtdVal) && row1EtdVal !== '';
+      
+      // 需求 2 修正：必須為完整的 4 位數字時間且合法
+      const isRow1EtdFilled = /^\d{4}$/.test(String(row1EtdVal).trim()) && isValidTime(row1EtdVal);
 
       const etd1Input = document.getElementById('inputEtd1');
+      const step2Card = document.getElementById('step2CardPop');
+
+      const stickyPane = document.querySelector('.sticky-top-pane');
+      const settingsBar = document.getElementById('settingsBar');
+      const tableResponsive = document.querySelector('.table-responsive');
+      const etdHeaderTh = document.querySelector('#worksheetView .data-table thead tr th:nth-child(4)');
+      const row1Tr = document.querySelector('#worksheetTbody tr:first-child');
+
+      // 清除聚光燈 z-index 重置
+      if (stickyPane) stickyPane.style.zIndex = '';
+      if (settingsBar) { settingsBar.style.position = ''; settingsBar.style.zIndex = ''; }
+      if (tableResponsive) { tableResponsive.style.position = ''; tableResponsive.style.zIndex = ''; }
+      if (etdHeaderTh) etdHeaderTh.classList.remove('highlight-etd-th');
+      if (row1Tr) row1Tr.classList.remove('step2-highlight-row');
 
       if (isMinsFilled && isRow1EtdFilled) {
+        // 兩步驟皆完成 -> 解除全螢幕暗化與提示卡片
+        if (overlay) overlay.classList.add('hidden');
+        if (step1Card) step1Card.classList.add('hidden');
+        if (step2Card) step2Card.classList.add('hidden');
+
         if (step1Pill) {
           step1Pill.className = 'step-pill shrunk-check';
           step1Pill.innerHTML = '<span class="step-label">✓</span>';
@@ -1510,7 +1772,27 @@
         }
         minsInput.classList.remove('guide-glow-step1');
         if (etd1Input) etd1Input.classList.remove('guide-glow-step2');
+
       } else if (isMinsFilled && !isRow1EtdFilled) {
+        // 步驟一完成 -> 開啟全螢幕暗化，全程高亮【第二步 STEP 2 + ETD 標題列 (需求 1)】
+        if (overlay) overlay.classList.remove('hidden');
+        if (step1Card) step1Card.classList.add('hidden');
+        if (step2Card) step2Card.classList.remove('hidden');
+
+        if (tableResponsive) {
+          tableResponsive.style.position = 'relative';
+          tableResponsive.style.zIndex = '850';
+        }
+
+        if (row1Tr) {
+          row1Tr.classList.add('step2-highlight-row');
+        }
+
+        // 需求 1: ETD 表頭同步顯示不變暗（無藍光）
+        if (etdHeaderTh) {
+          etdHeaderTh.classList.add('highlight-etd-th');
+        }
+
         if (step1Pill) {
           step1Pill.className = 'step-pill shrunk-check';
           step1Pill.innerHTML = '<span class="step-label">✓</span>';
@@ -1525,7 +1807,19 @@
         }
         minsInput.classList.remove('guide-glow-step1');
         if (etd1Input) etd1Input.classList.add('guide-glow-step2');
+
       } else {
+        // 步驟一未完成 -> 開啟全螢幕暗化，聚焦【第一步 STEP 1】
+        if (overlay) overlay.classList.remove('hidden');
+        if (step1Card) step1Card.classList.remove('hidden');
+        if (step2Card) step2Card.classList.add('hidden');
+
+        if (stickyPane) stickyPane.style.zIndex = '850';
+        if (settingsBar) {
+          settingsBar.style.position = 'relative';
+          settingsBar.style.zIndex = '860';
+        }
+
         if (step1Pill) {
           step1Pill.className = 'step-pill step-pill-1 active-guide';
           step1Pill.innerHTML = '<span class="step-label">STEP <span class="step-num">①</span></span>';
@@ -1726,7 +2020,6 @@
       handleHeaderSearch();
     }
 
-    /* 單擊跳轉 + 同步觸發數字鍵盤 + 保留搜尋結果列 */
     function handleHeaderSearch() {
       const query = String(document.getElementById('headerSearchInput').value).trim().toUpperCase();
       const btnClear = document.getElementById('btnClearSearch');
@@ -2036,6 +2329,7 @@
         wrapper.appendChild(inputCallsign);
         tdCallsign.appendChild(wrapper);
 
+        /* 順序 1 之 STEP ② 引導卡片與高亮聚焦容器 */
         const tdEtd = document.createElement('td');
         if (index === 0) {
           const etd1Container = document.createElement('div');
@@ -2083,8 +2377,14 @@
             handleHeaderSearch();
           };
 
+          const step2CardPop = document.createElement('span');
+          step2CardPop.id = 'step2CardPop';
+          step2CardPop.className = 'tutorial-card-pop hidden';
+          step2CardPop.innerHTML = '👈 請填寫這裡';
+
           etd1Container.appendChild(step2Badge);
           etd1Container.appendChild(inputEtd1);
+          etd1Container.appendChild(step2CardPop);
           tdEtd.appendChild(etd1Container);
         } else {
           const spanEtd = document.createElement('span');
@@ -2233,7 +2533,7 @@
       document.getElementById('listSummaryText').textContent = `目前列表共有 ${count} 筆資料`;
     }
 
-    /* 需求 1: 歷史紀錄原生 Canvas 圖表分析渲染邏輯 (100% 離線可用) */
+    /* 圖表分析 Dashboard 繪製邏輯 */
     function renderCharts() {
       const logs = appState.historyLogs || [];
       const filterDateVal = document.getElementById('filterDate').value;
@@ -2246,17 +2546,16 @@
         return matchDate && matchHour && matchType;
       });
 
-      // 1. 繪製 24 小時流量分布柱狀圖 (Bar Chart)
       const barCanvas = document.getElementById('chartHourlyBar');
       if (barCanvas) {
         const ctx = barCanvas.getContext('2d');
         const rect = barCanvas.getBoundingClientRect();
         barCanvas.width = rect.width * (window.devicePixelRatio || 1);
-        barCanvas.height = 200 * (window.devicePixelRatio || 1);
+        barCanvas.height = 180 * (window.devicePixelRatio || 1);
         ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
 
         const w = rect.width;
-        const h = 200;
+        const h = 180;
         ctx.clearRect(0, 0, w, h);
 
         const hourCounts = new Array(24).fill(0);
@@ -2273,13 +2572,12 @@
         });
 
         const paddingLeft = 30;
-        const paddingBottom = 25;
+        const paddingBottom = 22;
         const chartW = w - paddingLeft - 10;
         const chartH = h - paddingBottom - 10;
         const barWidth = chartW / 24;
 
-        // X/Y 軸輔助線
-        ctx.strokeStyle = '#e2e8f0';
+        ctx.strokeStyle = '#cbd5e1';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(paddingLeft, 10);
@@ -2293,7 +2591,6 @@
           const x = paddingLeft + i * barWidth + 2;
           const y = (h - paddingBottom) - bH;
 
-          // 標示 Peak Hour（最高流量時段為醒目橘紅色）
           if (i === peakHr && peakVal > 0) {
             ctx.fillStyle = '#f97316';
           } else {
@@ -2302,27 +2599,25 @@
 
           ctx.fillRect(x, y, Math.max(2, barWidth - 4), bH);
 
-          // 標註小時標籤
           if (i % 3 === 0) {
             ctx.fillStyle = '#64748b';
             ctx.font = '10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(String(i).padStart(2, '0'), x + barWidth / 2, h - 8);
+            ctx.fillText(String(i).padStart(2, '0'), x + barWidth / 2, h - 6);
           }
         }
       }
 
-      // 2. 繪製流管類型佔比圓餅圖 (Doughnut Chart)
       const pieCanvas = document.getElementById('chartTypeDoughnut');
       if (pieCanvas) {
         const ctx = pieCanvas.getContext('2d');
         const rect = pieCanvas.getBoundingClientRect();
         pieCanvas.width = rect.width * (window.devicePixelRatio || 1);
-        pieCanvas.height = 200 * (window.devicePixelRatio || 1);
+        pieCanvas.height = 180 * (window.devicePixelRatio || 1);
         ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
 
         const w = rect.width;
-        const h = 200;
+        const h = 180;
         ctx.clearRect(0, 0, w, h);
 
         const typeCounts = {};
@@ -2335,17 +2630,17 @@
 
         if (total === 0) {
           ctx.fillStyle = '#94a3b8';
-          ctx.font = '14px sans-serif';
+          ctx.font = '13px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('目前無篩選數據可供圖表分析', w / 2, h / 2);
+          ctx.fillText('目前無資料可分析', w / 2, h / 2);
           return;
         }
 
         const colors = ['#2563eb', '#f97316', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308', '#64748b'];
         const centerX = h / 2 + 10;
         const centerY = h / 2;
-        const outerRadius = 65;
-        const innerRadius = 35;
+        const outerRadius = 58;
+        const innerRadius = 30;
 
         let startAngle = -Math.PI / 2;
 
@@ -2364,9 +2659,8 @@
           startAngle += sliceAngle;
         });
 
-        // 右側圖例
         const legendX = centerX + outerRadius + 20;
-        let legendY = 25;
+        let legendY = 20;
         ctx.textAlign = 'left';
         ctx.font = '11px sans-serif';
 
@@ -2376,11 +2670,11 @@
           const color = colors[idx % colors.length];
 
           ctx.fillStyle = color;
-          ctx.fillRect(legendX, legendY, 12, 12);
+          ctx.fillRect(legendX, legendY, 10, 10);
 
           ctx.fillStyle = '#0f172a';
-          ctx.fillText(`${lbl}: ${cnt}筆 (${pct}%)`, legendX + 18, legendY + 10);
-          legendY += 20;
+          ctx.fillText(`${lbl}: ${cnt}筆 (${pct}%)`, legendX + 16, legendY + 9);
+          legendY += 18;
         });
       }
     }
@@ -2393,7 +2687,110 @@
       renderMultiTypeFilterPills();
       updateHourDropdown();
       filterAndRenderHistoryTable();
-      renderCharts(); // 渲染圖表
+      renderCharts();
+    }
+
+    /* 排行榜 (Leaderboard) 動態渲染邏輯 */
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboardListContainer');
+      const logs = appState.historyLogs || [];
+      container.innerHTML = '';
+
+      const now = new Date();
+      const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+      let filteredLogs = [];
+      if (appState.leaderboardFilter === 'day') {
+        filteredLogs = logs.filter(l => l.date === todayStr);
+      } else if (appState.leaderboardFilter === 'month') {
+        filteredLogs = logs.filter(l => l.date && l.date.startsWith(monthStr));
+      } else {
+        filteredLogs = logs;
+      }
+
+      if (filteredLogs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:30px; font-weight:bold;">當前時段尚無任何流管歷史紀錄可供排行榜分析</div>';
+        return;
+      }
+
+      const typeStats = {};
+      filteredLogs.forEach(l => {
+        const typeName = l.typeName || l.typeId;
+        if (!typeStats[typeName]) {
+          const typeObj = appState.types.find(t => t.id === l.typeId || t.name === typeName);
+          const mins = typeObj && isValidMinutes(typeObj.minutes) ? parseInt(typeObj.minutes, 10) : 10;
+          typeStats[typeName] = {
+            typeName: typeName,
+            typeId: l.typeId,
+            count: 0,
+            callsigns: new Set(),
+            hours: {},
+            intervalMins: mins,
+            totalDelayMins: 0
+          };
+        }
+
+        typeStats[typeName].count++;
+        if (l.callsign) typeStats[typeName].callsigns.add(l.callsign);
+        if (l.atdHour) {
+          typeStats[typeName].hours[l.atdHour] = (typeStats[typeName].hours[l.atdHour] || 0) + 1;
+        }
+        typeStats[typeName].totalDelayMins += typeStats[typeName].intervalMins;
+      });
+
+      const sortedTypes = Object.values(typeStats).sort((a, b) => b.count - a.count);
+      const medalIcons = ['🥇', '🥈', '🥉'];
+
+      sortedTypes.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'lb-card';
+
+        let rankDisplay = index < 3 
+          ? `<span class="lb-rank-badge">${medalIcons[index]}</span>`
+          : `<span class="lb-rank-num">${index + 1}</span>`;
+
+        let peakHr = '--';
+        let maxH = 0;
+        Object.keys(item.hours).forEach(h => {
+          if (item.hours[h] > maxH) {
+            maxH = item.hours[h];
+            peakHr = h;
+          }
+        });
+        const peakHrText = peakHr !== '--' ? `${peakHr}:00` : '--:00';
+
+        card.innerHTML = `
+          <div class="lb-title-group">
+            ${rankDisplay}
+            <div>
+              <div class="lb-type-name">${item.typeName}</div>
+              <div style="font-size:0.8rem; color:#64748b; font-weight:bold;">流管類別代碼: ${item.typeId}</div>
+            </div>
+          </div>
+
+          <div class="lb-stats-group">
+            <div class="lb-stat-item">
+              <span class="lb-stat-value" style="color:#2563eb;">${item.count} 次</span>
+              <span class="lb-stat-label">流管次數</span>
+            </div>
+            <div class="lb-stat-item">
+              <span class="lb-stat-value" style="color:#0284c7;">${item.callsigns.size} 架次</span>
+              <span class="lb-stat-label">受影響架次量 (不重複呼號)</span>
+            </div>
+            <div class="lb-stat-item">
+              <span class="lb-stat-value" style="color:#d97706;">${item.totalDelayMins} 分鐘</span>
+              <span class="lb-stat-label">估算累計流管延誤時間</span>
+            </div>
+            <div class="lb-stat-item">
+              <span class="lb-stat-value" style="color:#f97316;">${peakHrText}</span>
+              <span class="lb-stat-label">最高壅塞時段</span>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
     }
 
     function renderMultiTypeFilterPills() {
@@ -2528,7 +2925,7 @@
       });
     }
 
-    /* 需求 2: 班務交接與工作記錄邏輯 */
+    /* 班務交接與事件記錄邏輯 */
     function renderShiftLogs() {
       const container = document.getElementById('shiftLogContainer');
       const logs = appState.shiftLogs || [];
@@ -2941,14 +3338,45 @@
         }
       };
 
+      // 排行榜按鈕監聽 (需求 3)
+      const btnLbAll = document.getElementById('btnLbAll');
+      const btnLbMonth = document.getElementById('btnLbMonth');
+      const btnLbDay = document.getElementById('btnLbDay');
+
+      btnLbAll.onclick = () => {
+        appState.leaderboardFilter = 'all';
+        btnLbAll.className = 'btn-filter-pill active';
+        btnLbMonth.className = 'btn-filter-pill';
+        btnLbDay.className = 'btn-filter-pill';
+        renderLeaderboard();
+      };
+
+      btnLbMonth.onclick = () => {
+        appState.leaderboardFilter = 'month';
+        btnLbAll.className = 'btn-filter-pill';
+        btnLbMonth.className = 'btn-filter-pill active';
+        btnLbDay.className = 'btn-filter-pill';
+        renderLeaderboard();
+      };
+
+      btnLbDay.onclick = () => {
+        appState.leaderboardFilter = 'day';
+        btnLbAll.className = 'btn-filter-pill';
+        btnLbMonth.className = 'btn-filter-pill';
+        btnLbDay.className = 'btn-filter-pill active';
+        renderLeaderboard();
+      };
+
       const tabWorksheet = document.getElementById('tabWorksheet');
       const tabList = document.getElementById('tabList');
       const tabHistory = document.getElementById('tabHistory');
+      const tabLeaderboard = document.getElementById('tabLeaderboard');
       const tabShiftLog = document.getElementById('tabShiftLog');
 
       const worksheetView = document.getElementById('worksheetView');
       const listView = document.getElementById('listView');
       const historyView = document.getElementById('historyView');
+      const leaderboardView = document.getElementById('leaderboardView');
       const shiftLogView = document.getElementById('shiftLogView');
 
       const settingsBar = document.getElementById('settingsBar');
@@ -2959,6 +3387,7 @@
         tabWorksheet.classList.add('active');
         tabList.classList.remove('active');
         tabHistory.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
         tabShiftLog.classList.remove('active');
 
         worksheetView.classList.remove('hidden');
@@ -2966,6 +3395,7 @@
         typeSelectionBar.classList.remove('hidden');
         listView.classList.add('hidden');
         historyView.classList.add('hidden');
+        leaderboardView.classList.add('hidden');
         shiftLogView.classList.add('hidden');
         renderWorksheet();
       };
@@ -2976,6 +3406,7 @@
         tabList.classList.add('active');
         tabWorksheet.classList.remove('active');
         tabHistory.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
         tabShiftLog.classList.remove('active');
 
         worksheetView.classList.add('hidden');
@@ -2983,6 +3414,7 @@
         typeSelectionBar.classList.add('hidden');
         listView.classList.remove('hidden');
         historyView.classList.add('hidden');
+        leaderboardView.classList.add('hidden');
         shiftLogView.classList.add('hidden');
         renderList();
       };
@@ -2993,6 +3425,7 @@
         tabHistory.classList.add('active');
         tabWorksheet.classList.remove('active');
         tabList.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
         tabShiftLog.classList.remove('active');
 
         worksheetView.classList.add('hidden');
@@ -3000,8 +3433,28 @@
         typeSelectionBar.classList.add('hidden');
         listView.classList.add('hidden');
         historyView.classList.remove('hidden');
+        leaderboardView.classList.add('hidden');
         shiftLogView.classList.add('hidden');
         renderHistoryAndStatistics();
+      };
+
+      tabLeaderboard.onclick = () => {
+        hideCallsignPopover();
+        appState.viewMode = 'leaderboard';
+        tabLeaderboard.classList.add('active');
+        tabWorksheet.classList.remove('active');
+        tabList.classList.remove('active');
+        tabHistory.classList.remove('active');
+        tabShiftLog.classList.remove('active');
+
+        worksheetView.classList.add('hidden');
+        settingsBar.classList.add('hidden');
+        typeSelectionBar.classList.add('hidden');
+        listView.classList.add('hidden');
+        historyView.classList.add('hidden');
+        leaderboardView.classList.remove('hidden');
+        shiftLogView.classList.add('hidden');
+        renderLeaderboard();
       };
 
       tabShiftLog.onclick = () => {
@@ -3011,12 +3464,14 @@
         tabWorksheet.classList.remove('active');
         tabList.classList.remove('active');
         tabHistory.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
 
         worksheetView.classList.add('hidden');
         settingsBar.classList.add('hidden');
         typeSelectionBar.classList.add('hidden');
         listView.classList.add('hidden');
         historyView.classList.add('hidden');
+        leaderboardView.classList.add('hidden');
         shiftLogView.classList.remove('hidden');
         renderShiftLogs();
       };
