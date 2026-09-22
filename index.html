@@ -3,13 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>塔臺流量管制作業系統</title>
-
-  <!-- 引入 Firebase SDK (v10.8.0 Compat 版本) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-
+  <title>流管作業時間計算系統</title>
   <style>
     /* 全局樣式設定 */
     * {
@@ -48,6 +42,12 @@
       border: 1.5px solid #fef08a;
       box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
       white-space: nowrap;
+    }
+
+    .tutorial-card-pop.step1-card {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-color: #93c5fd;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.5);
     }
 
     /* 凍結窗格頂部固定區域 */
@@ -96,7 +96,7 @@
       white-space: nowrap;
     }
 
-    /* 🔥 置中搜尋欄 (管制員模式可見) */
+    /* 置中搜尋欄 */
     .header-center-search {
       flex: 1;
       display: flex;
@@ -148,9 +148,8 @@
     .header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       font-size: 0.95rem;
-      margin-left: auto;
     }
 
     .active-type-badge {
@@ -158,30 +157,19 @@
       color: #ffffff;
       padding: 3px 12px;
       border-radius: 9999px;
-      font-weight: 900;
-      font-size: 1.05rem;
+      font-weight: bold;
+      font-size: 1.15rem;
       box-shadow: 0 2px 4px rgba(249, 115, 22, 0.4);
       display: inline-block;
     }
 
-    .status-role-badge {
-      padding: 3px 10px;
-      border-radius: 4px;
-      font-size: 0.82rem;
-      font-weight: bold;
+    .save-notice {
+      color: #86efac;
+      font-size: 0.8rem;
+      white-space: nowrap;
     }
 
-    .role-viewer {
-      background-color: #64748b;
-      color: #ffffff;
-    }
-
-    .role-editor {
-      background-color: #22c55e;
-      color: #ffffff;
-    }
-
-    /* 搜尋結果卡片 */
+    /* 搜尋結果區塊 */
     .search-result-card {
       background-color: #ffffff;
       border: 2px solid #2563eb;
@@ -211,6 +199,32 @@
       display: inline-flex;
       align-items: center;
       margin-left: 8px;
+    }
+
+    .search-result-card .table-responsive {
+      max-height: 140px;
+    }
+
+    .search-result-card .data-table th {
+      padding: 4px 6px;
+      font-size: 0.88rem;
+    }
+
+    .search-result-card .data-table td {
+      padding: 3px 4px;
+      font-size: 0.88rem;
+    }
+
+    .search-result-card .read-only-cell {
+      font-size: 0.88rem;
+      min-height: 26px;
+      line-height: 22px;
+      padding: 1px 4px;
+    }
+
+    .search-result-card .active-type-badge {
+      font-size: 0.8rem;
+      padding: 1px 6px;
     }
 
     /* 視圖頁籤 */
@@ -338,6 +352,7 @@
       font-weight: 900;
     }
 
+    /* 收折視窗專用多選類型按鈕 */
     .modal-type-btn {
       padding: 8px 12px;
       font-size: 0.95rem;
@@ -368,6 +383,7 @@
       font-weight: 900;
     }
 
+    /* 自訂類型內刪除鍵小標籤 */
     .type-delete-x {
       position: absolute;
       right: 4px;
@@ -410,6 +426,11 @@
       color: #ffffff !important;
       font-size: 0.85rem !important;
       padding: 4px 12px !important;
+    }
+
+    #btnAddCustomTypeModal:hover {
+      background-color: #635a66 !important;
+      border-color: #635a66 !important;
     }
 
     .btn-filter-pill {
@@ -510,17 +531,35 @@
       border-radius: 6px;
     }
 
-    /* 呼吸燈與高脈衝閃爍特效 */
+    /* 呼吸燈與高脈衝閃爍視覺特效 (STEP 1 & STEP 2) */
     @keyframes pulseGlowMore {
-      0% { transform: scale(1); box-shadow: 0 0 4px rgba(37, 99, 235, 0.4); }
-      50% { transform: scale(1.12); box-shadow: 0 0 18px rgba(37, 99, 235, 0.85), 0 0 0 4px rgba(37, 99, 235, 0.3); }
-      100% { transform: scale(1); box-shadow: 0 0 4px rgba(37, 99, 235, 0.4); }
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
+      }
+      50% {
+        transform: scale(1.12);
+        box-shadow: 0 0 18px rgba(37, 99, 235, 0.85), 0 0 0 4px rgba(37, 99, 235, 0.3);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
+      }
     }
 
     @keyframes pulseInputStep1 {
-      0% { transform: scale(1); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25); }
-      50% { transform: scale(1.08); box-shadow: 0 0 16px rgba(37, 99, 235, 0.85); }
-      100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25); }
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+      }
+      50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 16px rgba(37, 99, 235, 0.85);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+      }
     }
 
     @keyframes intensePulseStep2 {
@@ -529,6 +568,7 @@
       100% { transform: scale(1); box-shadow: 0 0 4px rgba(220, 38, 38, 0.6); }
     }
 
+    /* 視覺化引導標籤樣式 */
     .step-pill {
       display: inline-flex;
       align-items: center;
@@ -539,205 +579,639 @@
       font-size: 0.85rem;
       font-weight: bold;
       line-height: 1;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
       white-space: nowrap;
     }
 
-    .step-label { display: inline-flex; align-items: center; gap: 2px; }
-    .step-num { font-size: 1.25em; transform: translateY(-1px); }
-
-    .step-pill-1 { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-    .step-pill-1.active-guide { background-color: #2563eb !important; color: #ffffff !important; animation: pulseGlowMore 1.2s infinite ease-in-out !important; }
-
-    .step-pill-2 { background-color: #fef3c7; color: #92400e; border: 1px solid #fde047; }
-    .step-pill-2.active-guide { background-color: #dc2626 !important; color: #ffffff !important; animation: intensePulseStep2 1.2s infinite ease-in-out !important; }
-
-    .step-pill.shrunk-check { padding: 2px 6px !important; border-radius: 9999px !important; background-color: #16a34a !important; color: #ffffff !important; animation: none !important; }
-    .step-pill.shrunk-check .step-text { display: none !important; }
-
-    .input-field.guide-glow-step1 { border: 2.5px solid #2563eb !important; animation: pulseInputStep1 1.4s infinite ease-in-out !important; }
-
-    #inputEtd1 { width: 92px !important; height: 38px !important; font-size: 1.2rem !important; font-weight: 900 !important; border-radius: 6px; }
-    .table-input.guide-glow-step2 { border: 2.5px solid #dc2626 !important; animation: intensePulseStep2 1.2s infinite ease-in-out !important; }
-
-    .input-error { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
-    .error-text { color: #dc2626; font-size: 0.85rem; }
-
-    .action-buttons-group { display: flex; flex-wrap: wrap; gap: 4px; }
-
-    /* 表格與唯讀相容樣式 */
-    .table-responsive {
-      width: 100%; overflow-x: auto; overflow-y: auto; max-height: calc(100dvh - 240px);
-      border: 1px solid #94a3b8; border-radius: 6px; background-color: #ffffff;
+    .step-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      line-height: 1;
     }
 
-    .data-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; min-width: 100%; }
-    .data-table th { background-color: #0f2a4a; color: #ffffff; font-size: 0.98rem; font-weight: bold; padding: 6px 3px; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #64748b; white-space: nowrap !important; }
-    .data-table td { padding: 5px 3px; border-bottom: 1px solid #94a3b8; border-right: 1px solid #94a3b8; font-size: 1.02rem; font-weight: bold; white-space: nowrap !important; }
+    .step-num {
+      font-size: 1.25em;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(-1px);
+    }
 
-    .data-table tr:nth-child(odd) { background-color: #ffffff; }
-    .data-table tr:nth-child(even) { background-color: #e2e8f0; }
-    .data-table tr:hover { background-color: #fef08a !important; }
+    .step-pill-1 {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
 
-    .callsign-cell-wrapper { display: flex; align-items: center; gap: 6px; width: 100%; position: relative; }
-    .drag-handle { user-select: none; padding: 4px 8px; cursor: grab; color: #64748b; font-size: 1.5rem; }
+    .step-pill-1.active-guide {
+      background-color: #2563eb !important;
+      color: #ffffff !important;
+      border: 1px solid #2563eb !important;
+      animation: pulseGlowMore 1.2s infinite ease-in-out !important;
+    }
+
+    .step-pill-2 {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde047;
+    }
+
+    .step-pill-2.active-guide {
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      border: 2px solid #fef08a !important;
+      animation: intensePulseStep2 1.2s infinite ease-in-out !important;
+    }
+
+    .step-pill.shrunk-check {
+      padding: 2px 6px !important;
+      border-radius: 9999px !important;
+      background-color: #16a34a !important;
+      color: #ffffff !important;
+      border: 1px solid #15803d !important;
+      font-size: 0.82rem !important;
+      animation: none !important;
+      transform: scale(1) !important;
+    }
+
+    .step-pill.shrunk-check .step-text {
+      display: none !important;
+    }
+
+    /* STEP 1 呼吸燈動畫 */
+    .input-field.guide-glow-step1 {
+      border: 2.5px solid #2563eb !important;
+      background-color: #ffffff !important;
+      animation: pulseInputStep1 1.4s infinite ease-in-out !important;
+      z-index: 5;
+    }
+
+    /* ETD 時間欄位 (92px x 38px) 與 STEP 2 高脈衝紅光動畫 */
+    #inputEtd1 {
+      width: 92px !important;
+      height: 38px !important;
+      font-size: 1.2rem !important;
+      font-weight: 900 !important;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-radius: 6px;
+    }
+
+    .table-input.guide-glow-step2 {
+      border: 2.5px solid #dc2626 !important;
+      background-color: #ffffff !important;
+      animation: intensePulseStep2 1.2s infinite ease-in-out !important;
+    }
+
+    .input-error {
+      border-color: #ef4444 !important;
+      background-color: #fef2f2 !important;
+    }
+
+    .error-text {
+      color: #dc2626;
+      font-size: 0.85rem;
+      font-weight: normal;
+    }
+
+    .action-buttons-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    /* 表格區域與固定標頭 */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100dvh - 240px);
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      background-color: #ffffff;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: center;
+      min-width: 780px;
+    }
+
+    .data-table th {
+      background-color: #0f2a4a;
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: bold;
+      padding: 8px 6px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      white-space: nowrap !important;
+      background-clip: padding-box;
+      border-bottom: 2px solid #64748b;
+    }
+
+    .data-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #94a3b8;
+      border-right: 1px solid #94a3b8;
+      font-size: 1.1rem;
+      font-weight: bold;
+      white-space: nowrap !important;
+      transition: background-color 0.2s;
+    }
+
+    .data-table tr:nth-child(odd) {
+      background-color: #ffffff;
+    }
+
+    .data-table tr:nth-child(even) {
+      background-color: #e2e8f0;
+    }
+
+    .data-table tr:hover {
+      background-color: #fef08a !important;
+    }
+
+    /* 所選列黃色指示，順序欄位左側加 6px 鮮藍條 */
+    .data-table tr:focus-within {
+      position: relative;
+      z-index: 20;
+    }
+    .data-table tr:focus-within td {
+      background-color: #fef08a !important;
+      color: #0f172a !important;
+    }
+    .data-table tr:focus-within td:nth-child(2) {
+      border-left: 6px solid #2563eb !important;
+    }
+
+    .callsign-cell-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      position: relative;
+    }
+
+    .drag-handle {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+      cursor: grab;
+      color: #64748b;
+      font-size: 1.5rem;
+    }
+
+    .drag-handle:hover {
+      background-color: #dbeafe;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+      background-color: #93c5fd;
+    }
+
+    .drag-target-over td {
+      border-top: 3px dashed #2563eb !important;
+      border-bottom: 3px dashed #2563eb !important;
+      background-color: #dbeafe !important;
+    }
 
     .table-input {
-      width: 100%; padding: 4px 6px; height: 36px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center;
-      font-size: 1.1rem; font-weight: bold; background-color: #fefef0;
-    }
-
-    /* 觀看者模式下鎖定 Input 欄位背景 */
-    .table-input[readonly], .input-field[readonly] {
-      background-color: #e2e8f0 !important;
-      color: #334155 !important;
-      border-color: #cbd5e1 !important;
-      cursor: not-allowed;
-      animation: none !important;
-      box-shadow: none !important;
-    }
-
-    .cartoon-row-51 { background: linear-gradient(135deg, #fef08a 0%, #fde047 100%) !important; }
-    .cartoon-cell-51 { font-family: "Impact", "Comic Sans MS", "微軟正黑體", sans-serif !important; font-size: 1.5rem !important; font-weight: 900 !important; color: #dc2626 !important; padding: 10px !important; text-align: center; }
-
-    /* 🔥 普通 PBT 儲存格樣式 (管制員編輯模式下預設復原樣式) */
-    .read-only-cell.pbt {
-      background-color: #bfdbfe;
-      color: #1e40af;
-      font-weight: bold;
-      font-size: 1.05rem;
-      padding: 4px 5px;
+      width: 100%;
+      padding: 4px 6px;
+      height: 36px;
+      border: 1px solid #cbd5e1;
       border-radius: 4px;
-      min-height: 32px;
-      line-height: 24px;
-      display: block;
-      white-space: nowrap !important;
+      text-align: center;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: bold;
+      background-color: #fefef0;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .table-input:focus {
+      outline: none;
+      border: 2px solid #2563eb;
+      background-color: #ffffff;
+      transform: scale(1.04);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      z-index: 10;
+      position: relative;
+    }
+
+    /* 第 51 列滿格誇張卡通警示 */
+    .cartoon-row-51 {
+      background: linear-gradient(135deg, #fef08a 0%, #fde047 100%) !important;
+      border-top: 4px dashed #dc2626 !important;
+      border-bottom: 4px dashed #dc2626 !important;
+    }
+
+    .cartoon-cell-51 {
+      font-family: "Impact", "Comic Sans MS", "Arial Black", "微軟正黑體", sans-serif !important;
+      font-size: 1.5rem !important;
+      font-weight: 900 !important;
+      color: #dc2626 !important;
+      text-shadow: none !important;
+      letter-spacing: 2px;
+      padding: 10px !important;
+      text-align: center;
     }
 
     .read-only-cell {
       background-color: #cbd5e1;
       color: #0f172a;
       font-weight: bold;
-      font-size: 1.02rem;
-      padding: 4px 5px;
+      font-size: 1.1rem;
+      padding: 4px 6px;
       border-radius: 4px;
-      min-height: 32px;
-      line-height: 24px;
       display: block;
+      min-height: 34px;
+      line-height: 26px;
       white-space: nowrap !important;
     }
 
-    /* 🔥 觀看模式專屬醒目 PBT 樣式 */
-    .viewer-mode-pbt-header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #0f2a4a 100%) !important;
-      color: #fef08a !important;
-      font-size: 1.05rem !important;
-      font-weight: 900 !important;
-      border-left: 2px solid #3b82f6 !important;
-      border-right: 2px solid #3b82f6 !important;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    .read-only-cell.pbt {
+      background-color: #bfdbfe;
+      color: #1e40af;
     }
 
-    .viewer-mode-pbt-cell {
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
-      color: #ffffff !important;
-      font-weight: 900 !important;
-      font-size: 1.1rem !important;
-      border: 2px solid #60a5fa !important;
-      box-shadow: 0 3px 8px rgba(29, 78, 216, 0.4) !important;
-      letter-spacing: 0.5px;
+    /* 懸浮視窗外框採 #766D79 */
+    .callsign-shortcut-popover {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #766D79;
+      border-radius: 10px;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      transition: opacity 0.15s ease, margin-top 0.15s ease;
     }
 
-    /* 觀看模式 2 欄左右並列 Grid 佈局 */
-    #listGroupedContainer {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+    .callsign-shortcut-popover.hidden {
+      opacity: 0;
+      pointer-events: none;
+      margin-top: -8px;
     }
 
-    @media (max-width: 900px) {
-      #listGroupedContainer {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .type-group-wrapper {
-      border-radius: 8px;
-      border: 2px solid #cbd5e1;
+    .shortcut-pop-btn {
+      padding: 5px 12px;
+      font-size: 0.92rem;
+      font-weight: 900;
       background-color: #ffffff;
-      overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      color: #1e40af;
+      border: 1.5px solid #766D79;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      transition: all 0.12s ease;
+    }
+
+    .shortcut-pop-btn:hover, .shortcut-pop-btn:active {
+      background-color: #766D79;
+      color: #ffffff;
+      border-color: #766D79;
+    }
+
+    /* 圖表分析 Dashboard 樣式 */
+    .dashboard-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chart-card {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
       display: flex;
       flex-direction: column;
+      align-items: center;
     }
 
-    .type-group-header {
-      padding: 8px 12px;
-      font-weight: 900;
-      font-size: 1.02rem;
+    .chart-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #0f2a4a;
+      margin-bottom: 6px;
+      align-self: flex-start;
+    }
+
+    .chart-canvas {
+      width: 100%;
+      height: 180px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* 排行榜專用卡片與獎牌樣式 */
+    .leaderboard-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .lb-card {
+      background-color: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1.5px solid rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
     }
 
-    /* 色彩主題群組樣式 */
-    .theme-blue { border-color: #93c5fd; }
-    .theme-blue .type-group-header { background-color: #eff6ff; color: #1d4ed8; }
-    .theme-orange { border-color: #fed7aa; }
-    .theme-orange .type-group-header { background-color: #fff7ed; color: #c2410c; }
-    .theme-green { border-color: #a7f3d0; }
-    .theme-green .type-group-header { background-color: #f0fdf4; color: #047857; }
-    .theme-purple { border-color: #e9d5ff; }
-    .theme-purple .type-group-header { background-color: #faf5ff; color: #7e22ce; }
-    .theme-cyan { border-color: #a5f3fc; }
-    .theme-cyan .type-group-header { background-color: #ecfeff; color: #0e7490; }
-
-    .callsign-shortcut-popover {
-      position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 2px solid #766D79; border-radius: 10px; padding: 5px 8px; display: flex; gap: 6px; z-index: 9999;
+    .lb-card:hover {
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
     }
-    .callsign-shortcut-popover.hidden { opacity: 0; pointer-events: none; }
-    .shortcut-pop-btn { padding: 5px 12px; font-size: 0.92rem; font-weight: 900; background-color: #ffffff; color: #1e40af; border: 1.5px solid #766D79; border-radius: 6px; cursor: pointer; }
 
-    /* 圖表與排行榜 */
-    .dashboard-charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-bottom: 12px; }
-    .chart-card { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-    .chart-title { font-size: 0.95rem; font-weight: bold; color: #0f2a4a; margin-bottom: 6px; align-self: flex-start; }
-    .chart-canvas { width: 100%; height: 180px; background: #ffffff; border-radius: 6px; border: 1px solid #cbd5e1; }
+    .lb-rank-badge {
+      font-size: 2rem;
+      font-weight: 900;
+      min-width: 46px;
+      text-align: center;
+    }
 
-    .leaderboard-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-    .lb-card { background-color: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-    .lb-rank-num { font-size: 1.4rem; font-weight: 900; color: #64748b; min-width: 46px; text-align: center; }
-    .lb-title-group { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 180px; }
-    .lb-type-name { font-size: 1.25rem; font-weight: 900; color: #0f2a4a; }
+    .lb-rank-num {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #64748b;
+      min-width: 46px;
+      text-align: center;
+    }
 
-    .stats-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-bottom: 12px; }
-    .stat-box { background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center; }
-    .stat-number { font-size: 1.5rem; font-weight: bold; color: #1e40af; }
-    .stat-label { font-size: 0.85rem; color: #64748b; font-weight: bold; }
+    .lb-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 180px;
+    }
 
-    .filter-controls-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background-color: #f1f5f9; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #cbd5e1; }
-    .multi-type-container { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; background: #ffffff; padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1; }
+    .lb-type-name {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #0f2a4a;
+    }
 
-    .shift-log-form { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .shift-log-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .tag-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: #fff; }
-    .tag-routine { background-color: #2563eb; } .tag-flow { background-color: #f97316; } .tag-weather { background-color: #0284c7; } .tag-equip { background-color: #dc2626; } .tag-other { background-color: #64748b; }
+    .lb-stats-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
 
-    .shift-log-card { background-color: #ffffff; border-left: 5px solid #1e40af; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .shift-log-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: #64748b; font-weight: bold; }
-    .shift-log-body { font-size: 1rem; color: #0f172a; white-space: pre-wrap; word-break: break-all; line-height: 1.5; }
+    .lb-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
 
-    /* Modal Backdrop */
-    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
-    .modal-card { background-color: #ffffff; border-radius: 8px; padding: 20px; width: 90%; max-width: 520px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); }
-    .modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #0f2a4a; }
-    .modal-body { margin-bottom: 16px; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
+    .lb-stat-value {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #1e40af;
+    }
 
-    .hidden { display: none !important; }
-    .nowrap-text { white-space: nowrap !important; }
+    .lb-stat-label {
+      font-size: 0.78rem;
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    /* 歷史紀錄統計卡片 */
+    .stats-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1e40af;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    .filter-controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      background-color: #f1f5f9;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .multi-type-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      background: #ffffff;
+      padding: 4px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      max-width: 100%;
+    }
+
+    /* 班務交接與事件記錄專用樣式 */
+    .shift-log-form {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .shift-log-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .tag-routine { background-color: #2563eb; }
+    .tag-flow { background-color: #f97316; }
+    .tag-weather { background-color: #0284c7; }
+    .tag-equip { background-color: #dc2626; }
+    .tag-other { background-color: #64748b; }
+
+    .shift-log-card {
+      background-color: #ffffff;
+      border-left: 5px solid #1e40af;
+      border-top: 1px solid #cbd5e1;
+      border-right: 1px solid #cbd5e1;
+      border-bottom: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .shift-log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      color: #64748b;
+      font-weight: bold;
+    }
+
+    .shift-log-body {
+      font-size: 1rem;
+      color: #0f172a;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* 手機 RWD 微調 */
+    @media (max-width: 768px) {
+      body { padding: 4px; }
+      header { padding: 6px 10px; }
+      .header-left h1 { font-size: 1.2rem; }
+      .tower-icon-custom { height: 28px; }
+      .active-type-badge { font-size: 1rem; padding: 2px 10px; }
+      .save-notice { display: none; }
+      
+      .header-center-search { min-width: 100%; order: 3; }
+      .search-box-wrapper { max-width: 100%; }
+
+      .type-selection-bar { padding: 4px; }
+      
+      .data-table th, .data-table td { font-size: 0.95rem; padding: 4px 2px; }
+      .table-input, .read-only-cell { font-size: 0.95rem; height: 32px; line-height: 24px; }
+      .cartoon-cell-51 { font-size: 1.2rem !important; }
+      
+      .filter-controls-bar { flex-direction: column; align-items: stretch; }
+      .multi-type-container { max-width: 100%; }
+      .table-responsive { max-height: calc(100dvh - 280px); }
+      .dashboard-charts-grid { grid-template-columns: 1fr; }
+      .modal-type-btn { flex: 1 0 calc(33.33% - 8px); }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #0f2a4a;
+    }
+
+    .modal-body {
+      margin-bottom: 16px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .nowrap-text {
+      white-space: nowrap !important;
+    }
   </style>
 </head>
 <body>
@@ -768,11 +1242,10 @@
             <path d="M 52 110 L 68 235 L 82 235 C 82 180, 88 140, 88 110 Z" fill="#6b7280" />
             <path d="M 12 110 C 12 140, 32 180, 32 235 L 52 235 L 52 110 Z" fill="#e5e7eb" />
           </svg>
-          <h1>塔臺流量管制作業</h1>
+          <h1>流管作業</h1>
         </div>
 
-        <!-- 🔥 需求 1：管制員模式搜尋欄 (僅在管制員模式顯現) -->
-        <div id="headerCenterSearch" class="header-center-search editor-only-btn hidden">
+        <div class="header-center-search">
           <div class="search-box-wrapper">
             <img class="search-icon-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232563eb' stroke-width='2.5'><path stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/></svg>" alt="搜尋圖示">
             <input type="text" id="headerSearchInput" class="search-input" placeholder="搜尋航班(英文數字皆可)" aria-label="搜尋航班" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false">
@@ -781,20 +1254,17 @@
         </div>
 
         <div class="header-right">
-          <!-- 觀看模式下隱藏「目前類型：KPL」 -->
-          <span id="activeTypeHeaderWrapper" class="editor-only-btn hidden">目前類型：<strong id="displayActiveType" class="active-type-badge">KPL</strong></span>
-          <span id="roleBadge" class="status-role-badge role-viewer">👁️ 觀看模式</span>
-          <button id="btnLoginHeader" class="btn btn-primary" style="padding:3px 10px;">🔑 管制員登入</button>
-          <button id="btnLogoutHeader" class="btn btn-danger hidden" style="padding:3px 10px;">🚪 登出</button>
+          <span>目前類型：<strong id="displayActiveType" class="active-type-badge">KPL</strong></span>
+          <span class="save-notice">✓ 資料已自動儲存於本機</span>
         </div>
       </header>
 
-      <!-- 跨類型全域搜尋結果區 (管制員專用) -->
+      <!-- 跨類型全域搜尋結果區 -->
       <section id="searchResultArea" class="search-result-card hidden">
         <div class="search-result-header">
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
             <span>全類型搜尋結果 (關鍵字: "<strong id="searchKeywordText"></strong>")</span>
-            <span class="search-tip-badge">👉 點擊該列跳轉至欄位</span>
+            <span class="search-tip-badge">👉 點擊該列將跳轉至ATD欄位</span>
           </div>
           <span id="searchResultCount" style="color:#2563eb;">共 0 筆</span>
         </div>
@@ -810,113 +1280,130 @@
                 <th style="width: 18%;" class="nowrap-text">預估後推(ETD-20分)</th>
               </tr>
             </thead>
-            <tbody id="searchResultTbody"></tbody>
+            <tbody id="searchResultTbody">
+            </tbody>
           </table>
         </div>
       </section>
 
-      <!-- 視圖頁籤 (觀看模式下此列完整隱藏，版面無縫遞補) -->
-      <div id="mainViewTabs" class="view-tabs restricted-tab hidden" role="tablist">
-        <button id="tabWorksheet" class="tab-btn restricted-tab hidden" role="tab">
+      <!-- 視圖頁籤 -->
+      <div class="view-tabs" role="tablist">
+        <button id="tabWorksheet" class="tab-btn active" role="tab" aria-selected="true">
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           工作表編輯
         </button>
-        <button id="tabList" class="tab-btn active" role="tab">
+        <button id="tabList" class="tab-btn" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           查看各類型列表
         </button>
 
-        <button id="tabHistory" class="tab-btn restricted-tab hidden" role="tab">
+        <button id="tabHistory" class="tab-btn" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
           紀錄及分析
         </button>
 
-        <button id="tabLeaderboard" class="tab-btn restricted-tab hidden" role="tab">
-          <svg viewBox="0 0 24 24"><path d="M12 15l-2 5l9-11h-7l2-5l-9 11h7z"/></svg>
+        <button id="tabLeaderboard" class="tab-btn" role="tab" aria-selected="false">
+          <!-- 改為頒獎臺 Icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="8" width="6" height="12" />
+            <rect x="3" y="14" width="6" height="6" />
+            <rect x="15" y="11" width="6" height="9" />
+            <line x1="1" y1="20" x2="23" y2="20" />
+          </svg>
           排行榜
         </button>
 
-        <button id="tabShiftLog" class="tab-btn restricted-tab hidden" role="tab">
+        <button id="tabShiftLog" class="tab-btn" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           班務交接與事件記錄
         </button>
       </div>
 
-      <!-- B. 類型選擇區 (僅在工作表編輯 + 編輯模式下顯示) -->
-      <section id="typeSelectionBar" class="type-selection-bar editor-only-btn hidden">
-        <button id="btnOpenTypeModal" class="btn btn-primary">📂 選擇流管類型</button>
+      <!-- B. 類型選擇區 (僅保留 Icon 版本，多選並排列顯示) -->
+      <section id="typeSelectionBar" class="type-selection-bar">
+        <button id="btnOpenTypeModal" class="btn btn-primary" aria-label="展開選擇流管類型">📂 選擇流管類型</button>
+        
+        <!-- 外層動態顯示所有經點選勾選之流管類型 -->
         <div id="typeButtonsContainer" class="type-buttons-inline"></div>
       </section>
 
-      <!-- C. 類型設定區 (僅在工作表編輯 + 編輯模式下顯示) -->
-      <section id="settingsBar" class="settings-bar editor-only-btn hidden">
+      <!-- C. 類型設定區 (STEP1 / STEP2 呼吸燈與高脈衝閃爍) -->
+      <section id="settingsBar" class="settings-bar">
         <div class="minutes-input-group">
           <span id="step1Pill" class="step-pill step-pill-1 active-guide">
             <span class="step-label">STEP <span class="step-num">①</span></span>
           </span>
 
           <label for="inputMinutes" style="margin-left: 2px;">流管時間間隔：</label>
-          <input type="text" id="inputMinutes" class="input-field guide-glow-step1" placeholder="整數" inputmode="numeric" pattern="[0-9]*">
+          <input type="text" id="inputMinutes" class="input-field guide-glow-step1" placeholder="整數" aria-label="設定分鐘數" inputmode="numeric" pattern="[0-9]*">
           <span>分鐘</span>
           <span id="minutesError" class="error-text hidden"></span>
         </div>
 
         <div class="action-buttons-group">
-          <button id="btnRenameType" class="btn btn-secondary editor-only-btn hidden">重新命名</button>
-          <button id="btnDeleteType" class="btn btn-danger editor-only-btn hidden">刪除此類型</button>
-          <button id="btnClearCurrentData" class="btn btn-secondary editor-only-btn hidden">清除目前資料</button>
-          <button id="btnResetAll" class="btn btn-danger editor-only-btn hidden">重置所有</button>
+          <button id="btnRenameType" class="btn btn-secondary" aria-label="重新命名自訂類型">重新命名</button>
+          <button id="btnDeleteType" class="btn btn-danger" aria-label="刪除自訂類型">刪除此類型</button>
+          <button id="btnClearCurrentData" class="btn btn-secondary" aria-label="清除目前類型資料">清除目前資料</button>
+          <button id="btnResetAll" class="btn btn-danger" aria-label="清除全部資料並恢復預設值">重置所有</button>
         </div>
       </section>
 
-    </div>
+    </div> <!-- 凍結窗格頂部結束 -->
 
     <!-- D. 工作表編輯區 -->
-    <main id="worksheetView" class="hidden">
+    <main id="worksheetView">
       <div class="table-responsive">
         <table class="data-table" aria-label="流管時間計算工作表">
           <thead>
             <tr>
-              <th style="width: 5%;" class="nowrap-text">清除</th>
-              <th style="width: 7%;" class="nowrap-text">順序</th>
-              <th style="width: 22%;" class="nowrap-text">呼號 (可拖移換順序)</th>
-              <th style="width: 16%;" id="thWorksheetEtd" class="nowrap-text">ETD</th>
-              <th style="width: 16%;" id="thWorksheetAtd" class="nowrap-text">ATD</th>
-              <th style="width: 17%;" class="nowrap-text" id="thWorksheetPbt">預估後推(ETD-20分)</th>
+              <th style="width: 5%;">清除</th>
+              <th style="width: 7%;">順序</th>
+              <th style="width: 22%;">呼號 (可拖移換順序)</th>
+              <th style="width: 16%;">ETD</th>
+              <th style="width: 16%;">ATD</th>
+              <th style="width: 17%;" class="nowrap-text">預估後推(ETD-20分)</th>
             </tr>
           </thead>
-          <tbody id="worksheetTbody"></tbody>
+          <tbody id="worksheetTbody">
+            <!-- 動態產生 1 至 51 列 -->
+          </tbody>
         </table>
       </div>
     </main>
 
     <!-- E. 查看列表區 -->
-    <section id="listView">
-      <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid #cbd5e1;">
-        
-        <!-- 目前流管中類型卡片 -->
-        <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:8px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <span style="font-weight:900; color:#0f2a4a; font-size:1.15rem; display:inline-flex; align-items:center; gap:6px;">
-            🏷️ 目前流管中類型：
-          </span>
-          <div id="listActiveTypesCardContainer" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;"></div>
+    <section id="listView" class="hidden">
+      <div style="background:#fff; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+          <span style="font-weight:bold;">篩選類型：</span>
+          <div id="listFilterButtonsContainer" class="type-buttons-inline"></div>
         </div>
-
-        <!-- 按流管類型詳細分類統計資訊 -->
-        <div id="listSummaryText" style="font-weight:bold; color:#1e40af; margin-bottom:10px; font-size:1.02rem;">目前列表無資料</div>
-        
-        <!-- 觀看模式 2 欄左右並列組別容器 -->
-        <div id="listGroupedContainer"></div>
-
+        <div id="listSummaryText" style="font-weight:bold; color:#1e40af; margin-bottom:8px;">目前列表共有 0 筆資料</div>
+        <div class="table-responsive">
+          <table class="data-table" aria-label="各類型唯讀資料列表">
+            <thead>
+              <tr>
+                <th style="width: 12%;">類型</th>
+                <th style="width: 22%;">呼號</th>
+                <th style="width: 16%;">ETD</th>
+                <th style="width: 16%;">ATD</th>
+                <th style="width: 17%;" class="nowrap-text">預估後推(ETD-20分)</th>
+              </tr>
+            </thead>
+            <tbody id="listTbody">
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- F. 紀錄及分析面板區 -->
     <section id="historyView" class="hidden">
       <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1;">
+        
         <div class="dashboard-charts-grid">
           <div class="chart-card">
-            <div class="chart-title">📊 24 小時航情流量分布圖</div>
+            <div class="chart-title">📊 24 小時航情流量分布圖 (最高流量 Peak Hour 橘色指示)</div>
             <canvas id="chartHourlyBar" class="chart-canvas"></canvas>
           </div>
           <div class="chart-card">
@@ -926,90 +1413,131 @@
         </div>
 
         <div class="stats-card-grid">
-          <div class="stat-box"><div id="statTotalCount" class="stat-number">0</div><div class="stat-label">自動紀錄總筆數</div></div>
-          <div class="stat-box"><div id="statTypesCount" class="stat-number">0</div><div class="stat-label">涵蓋流管類型數</div></div>
-          <div class="stat-box"><div id="statPeakHour" class="stat-number">--:00</div><div class="stat-label">最高流量時段</div></div>
+          <div class="stat-box">
+            <div id="statTotalCount" class="stat-number">0</div>
+            <div class="stat-label">自動紀錄總筆數</div>
+          </div>
+          <div class="stat-box">
+            <div id="statTypesCount" class="stat-number">0</div>
+            <div class="stat-label">涵蓋流管類型數</div>
+          </div>
+          <div class="stat-box">
+            <div id="statPeakHour" class="stat-number">--:00</div>
+            <div class="stat-label">最高流量時段</div>
+          </div>
         </div>
 
         <div class="filter-controls-bar">
           <div style="display:flex; align-items:center; gap:6px;">
-            <label for="filterDate" style="font-weight:bold;">日期篩選：</label>
-            <input type="date" id="filterDate" class="input-field" style="width:auto; font-size:0.95rem;">
-            <button id="btnClearDateFilter" class="btn btn-secondary" style="padding:3px 8px;">顯示全部</button>
+            <label for="filterDate" style="font-weight:bold;">日期篩選 (月曆)：</label>
+            <input type="date" id="filterDate" class="input-field" style="width:auto; font-size:0.95rem; cursor:pointer;" aria-label="日期月曆選擇器">
+            <button id="btnClearDateFilter" class="btn btn-secondary" style="padding:3px 8px; font-size:0.85rem;" title="重置為全部日期">顯示全部</button>
           </div>
+
           <div style="display:flex; align-items:center; gap:6px;">
             <label for="filterHourSelect" style="font-weight:bold;">時段篩選：</label>
-            <select id="filterHourSelect" class="input-field" style="width:auto; font-size:0.95rem;"><option value="all">全日彙整</option></select>
+            <select id="filterHourSelect" class="input-field" style="width:auto; font-size:0.95rem;">
+              <option value="all">全日彙整</option>
+            </select>
           </div>
+
           <div style="display:flex; align-items:center; gap:6px;">
             <label style="font-weight:bold;">類型篩選：</label>
-            <div id="multiTypePillsContainer" class="multi-type-container"></div>
+            <div id="multiTypePillsContainer" class="multi-type-container">
+            </div>
           </div>
-          <div style="margin-left:auto;"><button id="btnExportCSV" class="btn btn-primary">📥 匯出歷史紀錄 (CSV/Excel)</button></div>
+
+          <div style="margin-left:auto; display:flex; gap:8px;">
+            <button id="btnExportCSV" class="btn btn-primary">📥 匯出歷史紀錄 (CSV/Excel)</button>
+          </div>
         </div>
 
         <div id="historyTableContainer" class="table-responsive" style="max-height: 240px;">
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width: 18%;" class="nowrap-text">紀錄時間</th>
-                <th style="width: 10%;" class="nowrap-text">日期</th>
-                <th style="width: 8%;" class="nowrap-text">時</th>
-                <th style="width: 10%;" class="nowrap-text">類型</th>
-                <th style="width: 8%;" class="nowrap-text">順序</th>
-                <th style="width: 16%;" class="nowrap-text">呼號</th>
-                <th style="width: 10%;" id="thHistoryAtd" class="nowrap-text">ATD</th>
-                <th style="width: 10%;" id="thHistoryEtd" class="nowrap-text">ETD</th>
-                <th style="width: 10%;" class="nowrap-text" id="thHistoryPbt">預估後推(ETD-20分)</th>
+                <th style="width: 18%;">紀錄時間</th>
+                <th style="width: 10%;">日期</th>
+                <th style="width: 8%;">時</th>
+                <th style="width: 10%;">類型</th>
+                <th style="width: 8%;">順序</th>
+                <th style="width: 16%;">呼號</th>
+                <th style="width: 10%;">ATD</th>
+                <th style="width: 10%;">ETD</th>
+                <th style="width: 10%;" class="nowrap-text">預估後推</th>
               </tr>
             </thead>
-            <tbody id="historyTbody"></tbody>
+            <tbody id="historyTbody">
+            </tbody>
           </table>
         </div>
+
       </div>
     </section>
 
     <!-- H. 排行榜面板區 -->
     <section id="leaderboardView" class="hidden">
       <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1;">
+        
         <div class="filter-controls-bar" style="justify-content: space-between;">
-          <span style="font-weight:900; color:#0f2a4a; font-size:1.1rem;">🏆 流管次數與航情壅塞排行榜</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:900; color:#0f2a4a; font-size:1.1rem;">🏆 流管次數與航情壅塞排行榜</span>
+          </div>
           <div style="display:flex; gap:6px;">
             <button id="btnLbAll" class="btn-filter-pill active">🏆 歷史總榜</button>
             <button id="btnLbMonth" class="btn-filter-pill">📅 當月榜</button>
             <button id="btnLbDay" class="btn-filter-pill">☀️ 當日榜</button>
           </div>
         </div>
-        <div id="leaderboardListContainer" class="leaderboard-grid"></div>
+
+        <div id="leaderboardListContainer" class="leaderboard-grid">
+          <!-- 動態渲染前三名獎牌與名次清單 -->
+        </div>
+
       </div>
     </section>
 
     <!-- G. 班務交接與事件記錄 -->
     <section id="shiftLogView" class="hidden">
       <div style="background:#fff; padding:14px; border-radius:6px; border:1px solid #cbd5e1;">
+        
         <div class="shift-log-form">
           <div class="shift-log-row">
-            <label for="shiftAuthorInput" style="font-weight:bold;">✍️ 值班管制員：</label>
+            <label for="shiftAuthorInput" style="font-weight:bold;">✍️ 值班管制員代碼/姓名：</label>
             <input type="text" id="shiftAuthorInput" class="input-field" style="width:140px; text-align:left;" placeholder="例如: ATCO-A">
-            <label for="shiftCategorySelect" style="font-weight:bold; margin-left:10px;">🏷️ 分類：</label>
+            
+            <label for="shiftCategorySelect" style="font-weight:bold; margin-left:10px;">🏷️ 事件分類：</label>
             <select id="shiftCategorySelect" class="input-field" style="width:auto; font-size:0.95rem;">
-              <option value="routine">常規交接</option><option value="flow">流管告警</option><option value="weather">天候影響</option><option value="equip">設備異常</option><option value="other">其他</option>
+              <option value="routine">常規交接</option>
+              <option value="flow">流管告警</option>
+              <option value="weather">天候影響</option>
+              <option value="equip">設備異常</option>
+              <option value="other">心得分享/其他</option>
             </select>
+
             <button id="btnAddShiftLog" class="btn btn-primary" style="margin-left:auto; padding:5px 16px;">＋ 發布記錄</button>
           </div>
-          <div><textarea id="shiftContentInput" class="input-field" style="width:100%; height:75px; text-align:left; padding:8px;" placeholder="請輸入班務交接事項或事件紀錄..."></textarea></div>
+
+          <div>
+            <textarea id="shiftContentInput" class="input-field" style="width:100%; height:75px; text-align:left; padding:8px; font-size:0.95rem;" placeholder="請輸入班務交接事項、流管狀況、氣象變化或設備警示..."></textarea>
+          </div>
         </div>
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <h3 style="color:#0f2a4a; font-size:1.05rem;">📝 班務交接留言清單</h3>
-          <button id="btnClearAllShiftLogs" class="btn btn-danger" style="padding:2px 8px; font-size:0.8rem;">清空交接紀錄</button>
+          <h3 style="color:#0f2a4a; font-size:1.05rem;">📝 班務交接與歷史事件留言清單</h3>
+          <button id="btnClearAllShiftLogs" class="btn btn-danger" style="padding:2px 8px; font-size:0.8rem;">清空所有交接紀錄</button>
         </div>
-        <div id="shiftLogContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+        <div id="shiftLogContainer" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- 動態渲染交接紀錄卡片 -->
+        </div>
+
       </div>
     </section>
 
   </div>
 
-  <!-- 懸浮捷徑 popover -->
+  <!-- 懸浮視窗外框採 Ship Gray Light Shade 02 顏色 (#766D79) -->
   <div id="callsignShortcutPopover" class="callsign-shortcut-popover hidden">
     <button class="shortcut-pop-btn" type="button">CAL</button>
     <button class="shortcut-pop-btn" type="button">EVA</button>
@@ -1018,19 +1546,21 @@
     <button class="shortcut-pop-btn" type="button">CPA</button>
   </div>
 
-  <!-- 選擇流管類型 Modal -->
-  <div id="typeSelectorModal" class="modal-backdrop">
+  <!-- 選擇流管類型對話盒 (Modal - 包含新增與可刪除自訂類型功能) -->
+  <div id="typeSelectorModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="typeModalTitle">
     <div class="modal-card">
-      <div class="modal-title" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cbd5e1; padding-bottom:8px;">
+      <div id="typeModalTitle" class="modal-title" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cbd5e1; padding-bottom:8px;">
         <span>📂 請選擇流管類型 (可複選多種)</span>
-        <button id="btnCloseTypeModal" class="btn-x" style="padding:2px 8px;">✕</button>
+        <button id="btnCloseTypeModal" class="btn-x" style="padding:2px 8px;" aria-label="關閉視窗">✕</button>
       </div>
       <div class="modal-body" style="margin-top:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <span style="font-size:0.85rem; color:#64748b;">點擊項目可多選</span>
-          <button id="btnAddCustomTypeModal" class="btn editor-only-btn hidden">＋ 新增類型</button>
+          <span style="font-size:0.85rem; color:#64748b;">點擊項目可多選，點擊右側 ✕ 可刪除自訂類型</span>
+          <button id="btnAddCustomTypeModal" class="btn" type="button">＋ 新增類型</button>
         </div>
-        <div id="modalTypeGrid" style="display:flex; flex-wrap:wrap; gap:8px; max-height:300px; overflow-y:auto; padding:4px;"></div>
+        <div id="modalTypeGrid" style="display:flex; flex-wrap:wrap; gap:8px; max-height:300px; overflow-y:auto; padding:4px;">
+          <!-- 動態渲染所有類型多選按鈕 -->
+        </div>
       </div>
       <div class="modal-footer" style="border-top:1px solid #cbd5e1; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:0.85rem; color:#64748b;">💡 勾選種類後按「確認」即顯示於主頁面</span>
@@ -1042,8 +1572,8 @@
     </div>
   </div>
 
-  <!-- 通用 Modal -->
-  <div id="appModal" class="modal-backdrop">
+  <!-- 通用對話盒 (Modal) -->
+  <div id="appModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-card">
       <div id="modalTitle" class="modal-title">標題</div>
       <div id="modalBody" class="modal-body"></div>
@@ -1055,40 +1585,19 @@
   </div>
 
   <script>
-    // ===================================================
-    // 🔥【Firebase 雲端連線設定】
-    // ===================================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyAxol8m7IZQ52P2UshQjFFWLsP5xi1nv2s",
-      authDomain: "rctp-flowcontrol.firebaseapp.com",
-      databaseURL: "https://rctp-flowcontrol-default-rtdb.firebaseio.com",
-      projectId: "rctp-flowcontrol",
-      storageBucket: "rctp-flowcontrol.firebasestorage.app",
-      messagingSenderId: "956228851539",
-      appId: "1:956228851539:web:b2bb6fcf556742c751b3a6",
-      measurementId: "G-XL2NKDY8YV"
-    };
-
-    const isFirebaseConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
-    if (isFirebaseConfigured) {
-      firebase.initializeApp(firebaseConfig);
-    }
-
     const STORAGE_KEY = 'offlineUtcEtdPbtCalculator_v1';
+    
     const DEFAULT_TYPE_IDS = ['KPL', 'KB', 'MK', 'RJ', 'RK', 'JP', 'SU', 'VH', 'VM', 'SALMI', 'ELATO', 'KASKA', 'BORDO', 'SEDKU'];
     const MAX_CUSTOM_TYPES = 5;
     const TOTAL_DATA_ROWS = 50;
-
-    let isEditor = false;
-    let isRemoteUpdate = false;
 
     let appState = {
       version: 9,
       activeTypeId: 'KPL',
       visibleTypeIds: ['KPL'],
-      viewMode: 'list',
+      viewMode: 'worksheet',
       listFilter: 'all',
-      leaderboardFilter: 'all',
+      leaderboardFilter: 'all', // all, month, day
       types: [],
       rows: {},
       historyLogs: [],
@@ -1096,7 +1605,7 @@
       selectedHistoryTypes: []
     };
 
-    let tempSelectedTypeIds = [];
+    let tempSelectedTypeIds = []; // 開啟 Modal 時暫存之選取狀態
     let activeInputRef = null;
     let isShortcutInteracting = false;
     let draggedRowIndex = null;
@@ -1109,27 +1618,51 @@
       return rows;
     }
 
-    function sanitizeCallsign(val) { return val ? String(val) : ''; }
+    function sanitizeCallsign(val) {
+      if (val === null || val === undefined) return '';
+      return String(val);
+    }
 
     function createDefaultState() {
-      const types = DEFAULT_TYPE_IDS.map(id => ({ id: id, name: id, isDefault: true, minutes: '' }));
+      const types = DEFAULT_TYPE_IDS.map(id => ({
+        id: id,
+        name: id,
+        isDefault: true,
+        minutes: ''
+      }));
+
       const rows = {};
-      types.forEach(t => { rows[t.id] = createEmptyRows(); });
+      types.forEach(t => {
+        rows[t.id] = createEmptyRows();
+      });
+
       return {
-        version: 9, activeTypeId: 'KPL', visibleTypeIds: ['KPL'], viewMode: 'list', listFilter: 'all',
-        leaderboardFilter: 'all', types: types, rows: rows, historyLogs: [], shiftLogs: [], selectedHistoryTypes: [...DEFAULT_TYPE_IDS]
+        version: 9,
+        activeTypeId: 'KPL',
+        visibleTypeIds: ['KPL'],
+        viewMode: 'worksheet',
+        listFilter: 'all',
+        leaderboardFilter: 'all',
+        types: types,
+        rows: rows,
+        historyLogs: [],
+        shiftLogs: [],
+        selectedHistoryTypes: [...DEFAULT_TYPE_IDS]
       };
     }
 
     function normalizeTimeInput(value) {
-      if (!value) return '';
+      if (value === null || value === undefined) return '';
       let str = String(value).trim();
-      if (str.length === 3 && /^\d{3}$/.test(str)) return str.padStart(4, '0');
+      if (!str) return '';
+      if (str.length === 3 && /^\d{3}$/.test(str)) {
+        return str.padStart(4, '0');
+      }
       return str;
     }
 
     function isValidTime(value) {
-      if (!value) return true;
+      if (value === '' || value === null || value === undefined) return true;
       if (!/^\d{4}$/.test(value)) return false;
       const hh = parseInt(value.slice(0, 2), 10);
       const mm = parseInt(value.slice(2, 4), 10);
@@ -1138,7 +1671,9 @@
 
     function timeToMinutes(hhmm) {
       if (!hhmm || hhmm.length !== 4) return 0;
-      return parseInt(hhmm.slice(0, 2), 10) * 60 + parseInt(hhmm.slice(2, 4), 10);
+      const hh = parseInt(hhmm.slice(0, 2), 10);
+      const mm = parseInt(hhmm.slice(2, 4), 10);
+      return hh * 60 + mm;
     }
 
     function minutesToTime(minutes) {
@@ -1149,7 +1684,7 @@
     }
 
     function isValidMinutes(value) {
-      if (!value) return true;
+      if (value === '' || value === null || value === undefined) return true;
       const str = String(value).trim();
       if (!/^\d+$/.test(str)) return false;
       const num = Number(str);
@@ -1159,6 +1694,7 @@
     function recalculateType(typeId) {
       const typeObj = appState.types.find(t => t.id === typeId);
       if (!typeObj) return;
+
       const rows = appState.rows[typeId];
       if (!rows) return;
 
@@ -1171,28 +1707,41 @@
         const callsignHasValue = row.callsign && String(row.callsign).trim() !== '';
 
         if (i === 0) {
-          if (isValidTime(row.etd) && row.etd !== '') {
-            row.pbt = minutesToTime(timeToMinutes(row.etd) - 20);
-          } else { row.pbt = ''; }
+          const etdValid = isValidTime(row.etd) && row.etd !== '';
+          if (etdValid) {
+            const etdMins = timeToMinutes(row.etd);
+            row.pbt = minutesToTime(etdMins - 20);
+          } else {
+            row.pbt = '';
+          }
         } else {
           if (!callsignHasValue || minutes === null) {
-            row.etd = ''; row.pbt = '';
+            row.etd = '';
+            row.pbt = '';
           } else {
             const prevRow = rows[i - 1];
             let baseMins = null;
-            if (isValidTime(prevRow.atd) && prevRow.atd !== '') baseMins = timeToMinutes(prevRow.atd);
-            else if ((!prevRow.atd || prevRow.atd === '') && isValidTime(prevRow.etd) && prevRow.etd !== '') baseMins = timeToMinutes(prevRow.etd);
+
+            if (isValidTime(prevRow.atd) && prevRow.atd !== '') {
+              baseMins = timeToMinutes(prevRow.atd);
+            } else if ((!prevRow.atd || prevRow.atd === '') && isValidTime(prevRow.etd) && prevRow.etd !== '') {
+              baseMins = timeToMinutes(prevRow.etd);
+            }
 
             if (baseMins !== null) {
               const etdMins = baseMins + minutes;
               row.etd = minutesToTime(etdMins);
               row.pbt = minutesToTime(etdMins - 20);
-            } else { row.etd = ''; row.pbt = ''; }
+            } else {
+              row.etd = '';
+              row.pbt = '';
+            }
           }
         }
       }
     }
 
+    /* 還原 STEP 1 & STEP 2 呼吸燈與高脈衝閃爍視覺動態 */
     function updateVisualGuidanceState() {
       const currentType = appState.types.find(t => t.id === appState.activeTypeId);
       if (!currentType) return;
@@ -1203,19 +1752,6 @@
       const step2Badge = document.getElementById('step2Badge');
       const etd1Input = document.getElementById('inputEtd1');
 
-      if (!isEditor) {
-        if (step1Pill) step1Pill.classList.add('hidden');
-        if (step2Pill) step2Pill.classList.add('hidden');
-        if (step2Badge) step2Badge.classList.add('hidden');
-        if (minsInput) minsInput.classList.remove('guide-glow-step1');
-        if (etd1Input) etd1Input.classList.remove('guide-glow-step2');
-        return;
-      }
-
-      if (step1Pill) step1Pill.classList.remove('hidden');
-      if (step2Pill) step2Pill.classList.remove('hidden');
-      if (step2Badge) step2Badge.classList.remove('hidden');
-
       const rows = appState.rows[appState.activeTypeId] || [];
       const row1EtdVal = rows[0] ? rows[0].etd : '';
 
@@ -1225,54 +1761,110 @@
       if (isMinsFilled && isRow1EtdFilled) {
         if (minsInput) minsInput.classList.remove('guide-glow-step1');
         if (etd1Input) etd1Input.classList.remove('guide-glow-step2');
-        if (step1Pill) { step1Pill.className = 'step-pill shrunk-check'; step1Pill.innerHTML = '✓'; }
-        if (step2Pill) { step2Pill.className = 'step-pill shrunk-check'; step2Pill.innerHTML = '✓'; }
-        if (step2Badge) { step2Badge.className = 'step-pill shrunk-check'; step2Badge.innerHTML = '✓'; }
+
+        if (step1Pill) {
+          step1Pill.className = 'step-pill shrunk-check';
+          step1Pill.innerHTML = '<span class="step-label">✓</span>';
+        }
+        if (step2Pill) {
+          step2Pill.className = 'step-pill shrunk-check';
+          step2Pill.innerHTML = '<span class="step-label">✓</span>';
+        }
+        if (step2Badge) {
+          step2Badge.className = 'step-pill shrunk-check';
+          step2Badge.innerHTML = '✓';
+        }
       } else if (isMinsFilled && !isRow1EtdFilled) {
         if (minsInput) minsInput.classList.remove('guide-glow-step1');
         if (etd1Input) etd1Input.classList.add('guide-glow-step2');
-        if (step1Pill) { step1Pill.className = 'step-pill shrunk-check'; step1Pill.innerHTML = '✓'; }
-        if (step2Pill) { step2Pill.className = 'step-pill step-pill-2 active-guide'; step2Pill.innerHTML = 'STEP ②'; }
-        if (step2Badge) { step2Badge.className = 'step-pill step-pill-2 active-guide'; step2Badge.innerHTML = 'STEP ②'; }
+
+        if (step1Pill) {
+          step1Pill.className = 'step-pill shrunk-check';
+          step1Pill.innerHTML = '<span class="step-label">✓</span>';
+        }
+        if (step2Pill) {
+          step2Pill.className = 'step-pill step-pill-2 active-guide';
+          step2Pill.innerHTML = '<span class="step-label">STEP <span class="step-num">②</span></span><span class="step-text">輸入順序1之ETD</span>';
+        }
+        if (step2Badge) {
+          step2Badge.className = 'step-pill step-pill-2 active-guide';
+          step2Badge.innerHTML = 'STEP <span class="step-num">②</span>';
+        }
       } else {
         if (minsInput) minsInput.classList.add('guide-glow-step1');
         if (etd1Input) etd1Input.classList.remove('guide-glow-step2');
-        if (step1Pill) { step1Pill.className = 'step-pill step-pill-1 active-guide'; step1Pill.innerHTML = 'STEP ①'; }
-        if (step2Pill) { step2Pill.className = 'step-pill step-pill-2'; step2Pill.innerHTML = 'STEP ②'; }
-        if (step2Badge) { step2Badge.className = 'step-pill step-pill-2'; step2Badge.innerHTML = 'STEP ②'; }
+
+        if (step1Pill) {
+          step1Pill.className = 'step-pill step-pill-1 active-guide';
+          step1Pill.innerHTML = '<span class="step-label">STEP <span class="step-num">①</span></span>';
+        }
+        if (step2Pill) {
+          step2Pill.className = 'step-pill step-pill-2';
+          step2Pill.innerHTML = '<span class="step-label">STEP <span class="step-num">②</span></span><span class="step-text">輸入順序1之ETD</span>';
+        }
+        if (step2Badge) {
+          step2Badge.className = 'step-pill step-pill-2';
+          step2Badge.innerHTML = 'STEP <span class="step-num">②</span>';
+        }
       }
     }
 
-    /* 動態切換表頭名稱 (觀看模式中文 vs 編輯模式專業英文) */
-    function updateDynamicTableHeaders() {
-      const etdText = isEditor ? 'ETD' : '預計起飛時間';
-      const atdText = isEditor ? 'ATD' : '實際起飛時間';
-      const pbtText = isEditor ? '預估後推(ETD-20分)' : '預估後推時間';
-
-      const thWorksheetEtd = document.getElementById('thWorksheetEtd');
-      const thWorksheetAtd = document.getElementById('thWorksheetAtd');
-      const thWorksheetPbt = document.getElementById('thWorksheetPbt');
-      if (thWorksheetEtd) thWorksheetEtd.textContent = etdText;
-      if (thWorksheetAtd) thWorksheetAtd.textContent = atdText;
-      if (thWorksheetPbt) thWorksheetPbt.textContent = pbtText;
-
-      const thHistoryAtd = document.getElementById('thHistoryAtd');
-      const thHistoryEtd = document.getElementById('thHistoryEtd');
-      const thHistoryPbt = document.getElementById('thHistoryPbt');
-      if (thHistoryAtd) thHistoryAtd.textContent = atdText;
-      if (thHistoryEtd) thHistoryEtd.textContent = etdText;
-      if (thHistoryPbt) thHistoryPbt.textContent = pbtText;
+    function handleTouchStart(e, index) {
+      draggedRowIndex = index;
+      const row = e.target.closest('tr');
+      if(row) {
+        row.style.opacity = '0.5';
+        row.classList.add('dragging-row');
+      }
     }
 
-    function saveData(syncToCloud = false) {
-      if (isRemoteUpdate) return;
+    function handleTouchMove(e) {
+      if (draggedRowIndex === null) return;
+      e.preventDefault(); 
+      const touch = e.touches[0];
+      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!targetEl) return;
+      
+      const targetRow = targetEl.closest('tr');
+      document.querySelectorAll('.drag-target-over').forEach(el => el.classList.remove('drag-target-over'));
+      
+      if (targetRow && targetRow.closest('tbody') && !targetRow.classList.contains('cartoon-row-51')) {
+         targetRow.classList.add('drag-target-over');
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (draggedRowIndex === null) return;
+      
+      const touch = e.changedTouches[0];
+      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      let targetIndex = null;
+
+      if (targetEl) {
+        const targetRow = targetEl.closest('tr');
+        if (targetRow && targetRow.parentNode.id === 'worksheetTbody' && !targetRow.classList.contains('cartoon-row-51')) {
+           const rows = Array.from(targetRow.parentNode.children);
+           targetIndex = rows.indexOf(targetRow);
+        }
+      }
+
+      document.querySelectorAll('.drag-target-over').forEach(el => el.classList.remove('drag-target-over'));
+      document.querySelectorAll('.dragging-row').forEach(el => {
+        el.classList.remove('dragging-row');
+        el.style.opacity = '1';
+      });
+
+      if (targetIndex !== null && targetIndex !== draggedRowIndex && targetIndex < TOTAL_DATA_ROWS) {
+         swapCallsigns(draggedRowIndex, targetIndex);
+      }
+      draggedRowIndex = null;
+    }
+
+    function saveData() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        if (syncToCloud && isFirebaseConfigured && firebase.apps.length) {
-          firebase.database().ref('appState').set(appState);
-        }
       } catch (e) {
-        console.error('儲存失敗', e);
+        console.error('寫入 localStorage 失敗', e);
       }
     }
 
@@ -1285,7 +1877,21 @@
             appState = parsed;
             appState.historyLogs = appState.historyLogs || [];
             appState.shiftLogs = appState.shiftLogs || [];
-            appState.visibleTypeIds = Array.isArray(appState.visibleTypeIds) && appState.visibleTypeIds.length > 0 ? appState.visibleTypeIds : ['KPL'];
+            appState.visibleTypeIds = Array.isArray(appState.visibleTypeIds) && appState.visibleTypeIds.length > 0 
+              ? appState.visibleTypeIds 
+              : [appState.activeTypeId || 'KPL'];
+
+            appState.types.forEach(t => {
+              if (t.id === 'SAL' || t.name === 'SAL') { t.id = 'SALMI'; t.name = 'SALMI'; }
+              if (t.id === 'ELA' || t.name === 'ELA') { t.id = 'ELATO'; t.name = 'ELATO'; }
+              if (t.id === 'KAS' || t.name === 'KAS') { t.id = 'KASKA'; t.name = 'KASKA'; }
+              if (t.id === 'SEKDU' || t.name === 'SEKDU') { t.id = 'SEDKU'; t.name = 'SEDKU'; }
+            });
+
+            if (appState.rows['SAL']) { appState.rows['SALMI'] = appState.rows['SAL']; delete appState.rows['SAL']; }
+            if (appState.rows['ELA']) { appState.rows['ELATO'] = appState.rows['ELA']; delete appState.rows['ELA']; }
+            if (appState.rows['KAS']) { appState.rows['KASKA'] = appState.rows['KAS']; delete appState.rows['KAS']; }
+            if (appState.rows['SEKDU']) { appState.rows['SEDKU'] = appState.rows['SEKDU']; delete appState.rows['SEKDU']; }
 
             DEFAULT_TYPE_IDS.forEach(id => {
               if (!appState.types.some(t => t.id === id)) {
@@ -1294,213 +1900,99 @@
             });
 
             appState.types.forEach(t => {
-              if (!appState.rows[t.id]) appState.rows[t.id] = createEmptyRows();
+              if (!appState.rows[t.id]) {
+                appState.rows[t.id] = createEmptyRows();
+              }
               while (appState.rows[t.id].length < TOTAL_DATA_ROWS) {
                 appState.rows[t.id].push({ callsign: '', etd: '', atd: '', pbt: '' });
               }
               recalculateType(t.id);
             });
+
+            if (!Array.isArray(appState.selectedHistoryTypes) || appState.selectedHistoryTypes.length === 0) {
+              appState.selectedHistoryTypes = appState.types.map(t => t.id);
+            }
             return;
           }
         }
-      } catch (e) { console.warn('載入預設設定', e); }
+      } catch (e) {
+        console.warn('載入失敗，復原預設設定', e);
+      }
       appState = createDefaultState();
       appState.types.forEach(t => recalculateType(t.id));
       saveData();
     }
 
-    function initFirebaseSync() {
-      if (!isFirebaseConfigured || !firebase.apps.length) return;
-
-      firebase.database().ref('appState').on('value', snapshot => {
-        const data = snapshot.val();
-        if (data && data.types && data.rows) {
-          const activeEl = document.activeElement;
-          const isTyping = activeEl && activeEl.tagName === 'INPUT' && activeEl.closest('#worksheetView');
-
-          isRemoteUpdate = true;
-          appState = data;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-          isRemoteUpdate = false;
-
-          renderTypeButtons();
-
-          if (!isTyping) {
-            if (appState.viewMode === 'worksheet') renderWorksheet();
-            else if (appState.viewMode === 'list') renderList();
-            else if (appState.viewMode === 'history') renderHistoryAndStatistics();
-            else if (appState.viewMode === 'leaderboard') renderLeaderboard();
-            else if (appState.viewMode === 'shiftLog') renderShiftLogs();
-          } else {
-            updateCalculatedCellsInDOM();
-          }
-        }
-      });
-
-      firebase.auth().onAuthStateChanged(user => {
-        const activeTypeWrapper = document.getElementById('activeTypeHeaderWrapper');
-        const mainTabs = document.getElementById('mainViewTabs');
-
-        if (user) {
-          isEditor = true;
-          document.getElementById('roleBadge').className = 'status-role-badge role-editor';
-          document.getElementById('roleBadge').textContent = '⚡ 管制員 (編輯模式)';
-          document.getElementById('btnLoginHeader').classList.add('hidden');
-          document.getElementById('btnLogoutHeader').classList.remove('hidden');
-
-          if (activeTypeWrapper) activeTypeWrapper.classList.remove('hidden');
-          if (mainTabs) mainTabs.classList.remove('hidden');
-
-          document.querySelectorAll('.restricted-tab').forEach(el => el.classList.remove('hidden'));
-          document.querySelectorAll('.editor-only-btn').forEach(el => el.classList.remove('hidden'));
-
-          updateDynamicTableHeaders();
-          updateTypeSelectionBarVisibility();
-
-          document.getElementById('tabWorksheet').click();
-        } else {
-          isEditor = false;
-          document.getElementById('roleBadge').className = 'status-role-badge role-viewer';
-          document.getElementById('roleBadge').textContent = '👁️ 觀看模式';
-          document.getElementById('btnLoginHeader').classList.remove('hidden');
-          document.getElementById('btnLogoutHeader').classList.add('hidden');
-
-          if (activeTypeWrapper) activeTypeWrapper.classList.add('hidden');
-          if (mainTabs) mainTabs.classList.add('hidden');
-
-          document.querySelectorAll('.restricted-tab').forEach(el => el.classList.add('hidden'));
-          document.querySelectorAll('.editor-only-btn').forEach(el => el.classList.add('hidden'));
-
-          updateDynamicTableHeaders();
-          updateTypeSelectionBarVisibility();
-
-          document.getElementById('tabList').click();
-        }
-      });
-    }
-
-    function updateTypeSelectionBarVisibility() {
-      const typeBar = document.getElementById('typeSelectionBar');
-      const settingsBar = document.getElementById('settingsBar');
-      const show = (appState.viewMode === 'worksheet' && isEditor);
-      if (typeBar) {
-        if (show) typeBar.classList.remove('hidden'); else typeBar.classList.add('hidden');
-      }
-      if (settingsBar) {
-        if (show) settingsBar.classList.remove('hidden'); else settingsBar.classList.add('hidden');
-      }
-    }
-
-    /* 🔥 智慧提取引擎：動態整合現有工作表數據與歷史紀錄 */
-    function getAllFlightRecords() {
-      const records = [];
-      const todayStr = "2026-09-14";
-      const now = new Date();
-      const timeNow = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-
-      if (appState.types && appState.rows) {
-        appState.types.forEach(t => {
-          const rows = appState.rows[t.id] || [];
-          rows.forEach((r, idx) => {
-            const callsignClean = sanitizeCallsign(r.callsign).trim();
-            if (callsignClean) {
-              const etdVal = sanitizeCallsign(r.etd).trim();
-              const atdVal = sanitizeCallsign(r.atd).trim();
-              const pbtVal = sanitizeCallsign(r.pbt).trim();
-
-              let atdHour = '00';
-              if (atdVal.length === 4 && isValidTime(atdVal)) atdHour = atdVal.slice(0, 2);
-              else if (etdVal.length === 4 && isValidTime(etdVal)) atdHour = etdVal.slice(0, 2);
-
-              records.push({
-                id: `live_${t.id}_${idx+1}_${callsignClean}`,
-                timestamp: `${todayStr} ${timeNow}`,
-                date: todayStr,
-                atdHour: atdHour,
-                typeId: t.id,
-                typeName: t.name,
-                seq: idx + 1,
-                callsign: callsignClean,
-                etd: etdVal,
-                atd: atdVal,
-                pbt: pbtVal,
-                minutes: t.minutes || '10'
-              });
-            }
-          });
-        });
-      }
-
-      if (Array.isArray(appState.historyLogs)) {
-        appState.historyLogs.forEach(log => {
-          const exists = records.some(r => r.typeId === log.typeId && r.seq === log.seq && r.callsign === log.callsign);
-          if (!exists && log.callsign) {
-            records.push({
-              ...log,
-              minutes: log.minutes || '10'
-            });
-          }
-        });
-      }
-
-      return records;
-    }
-
-    function syncCurrentRowsToHistoryLogs() {
-      const liveRecords = getAllFlightRecords();
-      liveRecords.forEach(r => {
-        const existing = appState.historyLogs.find(l => l.typeId === r.typeId && l.seq === r.seq && l.callsign === r.callsign);
-        if (!existing) {
-          appState.historyLogs.push(r);
-        } else {
-          existing.atd = r.atd;
-          existing.etd = r.etd;
-          existing.pbt = r.pbt;
-          existing.atdHour = r.atdHour;
-        }
-      });
-    }
-
     function autoLogATD(typeId, seq, callsign, atd, etd, pbt) {
-      if (!isEditor || !atd || atd.length !== 4 || !isValidTime(atd) || !callsign) return;
+      if (!atd || atd.length !== 4 || !isValidTime(atd) || !callsign || String(callsign).trim() === '') return;
+
       const typeObj = appState.types.find(t => t.id === typeId);
       const typeName = typeObj ? typeObj.name : typeId;
-      const todayStr = "2026-09-14";
+
       const now = new Date();
-      const timestampStr = `${todayStr} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      const timestampStr = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      const dateStr = timestampStr.split(' ')[0];
+      const atdHour = atd.slice(0, 2);
+
+      const existingIndex = appState.historyLogs.findIndex(l =>
+        l.typeId === typeId && l.seq === seq && l.callsign === String(callsign).trim()
+      );
 
       const logItem = {
-        id: 'log_' + Date.now(), timestamp: timestampStr, date: todayStr,
-        atdHour: atd.slice(0, 2), typeId: typeId, typeName: typeName, seq: seq, callsign: String(callsign).trim(), atd: atd, etd: etd, pbt: pbt
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        timestamp: timestampStr,
+        date: dateStr,
+        atdHour: atdHour,
+        typeId: typeId,
+        typeName: typeName,
+        seq: seq,
+        callsign: String(callsign).trim(),
+        atd: atd,
+        etd: etd,
+        pbt: pbt
       };
 
-      const existingIndex = appState.historyLogs.findIndex(l => l.typeId === typeId && l.seq === seq && l.callsign === String(callsign).trim());
-      if (existingIndex >= 0) appState.historyLogs[existingIndex] = logItem;
-      else appState.historyLogs.push(logItem);
-      saveData(true);
+      if (existingIndex >= 0) {
+        appState.historyLogs[existingIndex] = logItem;
+      } else {
+        appState.historyLogs.push(logItem);
+      }
+      saveData();
     }
 
     function clearRowAndShift(idx) {
-      if (!isEditor) return;
-      const rows = appState.rows[appState.activeTypeId];
+      const typeId = appState.activeTypeId;
+      const rows = appState.rows[typeId];
       if (!rows || idx < 0 || idx >= TOTAL_DATA_ROWS) return;
+
       rows.splice(idx, 1);
       rows.push({ callsign: '', etd: '', atd: '', pbt: '' });
-      recalculateType(appState.activeTypeId);
-      saveData(true);
+
+      recalculateType(typeId);
+      saveData();
       renderWorksheet();
+      handleHeaderSearch();
     }
 
     function swapCallsigns(srcIndex, tgtIndex) {
-      if (!isEditor) return;
-      const rows = appState.rows[appState.activeTypeId];
+      const typeId = appState.activeTypeId;
+      const rows = appState.rows[typeId];
       if (!rows || srcIndex === tgtIndex) return;
-      const temp = rows[srcIndex].callsign;
+
+      const tempCallsign = rows[srcIndex].callsign;
       rows[srcIndex].callsign = rows[tgtIndex].callsign;
-      rows[tgtIndex].callsign = temp;
-      recalculateType(appState.activeTypeId);
-      saveData(true);
+      rows[tgtIndex].callsign = tempCallsign;
+
+      recalculateType(typeId);
+      saveData();
       renderWorksheet();
+      handleHeaderSearch();
     }
 
     function handleHeaderSearch() {
@@ -1512,7 +2004,9 @@
       const searchResultTbody = document.getElementById('searchResultTbody');
 
       if (!query) {
-        btnClear.classList.add('hidden'); searchResultArea.classList.add('hidden'); return;
+        btnClear.classList.add('hidden');
+        searchResultArea.classList.add('hidden');
+        return;
       }
 
       btnClear.classList.remove('hidden');
@@ -1522,7 +2016,13 @@
         const rows = appState.rows[typeObj.id] || [];
         rows.forEach((r, idx) => {
           if (r.callsign && String(r.callsign).toUpperCase().includes(query)) {
-            matches.push({ typeId: typeObj.id, typeName: typeObj.name, seq: idx + 1, index: idx, ...r });
+            matches.push({
+              typeId: typeObj.id,
+              typeName: typeObj.name,
+              seq: idx + 1,
+              index: idx,
+              ...r
+            });
           }
         });
       });
@@ -1537,30 +2037,96 @@
         matches.forEach(m => {
           const tr = document.createElement('tr');
           tr.style.cursor = 'pointer';
+          tr.title = '點擊跳轉至工作表填寫 ATD';
           tr.innerHTML = `
             <td><span class="active-type-badge" style="font-size:0.8rem; padding:1px 6px; background-color:#2563eb;">${m.typeName}</span></td>
-            <td><strong>${m.seq}</strong></td><td><strong>${m.callsign}</strong></td>
-            <td><span class="read-only-cell">${m.etd || ''}</span></td><td>${m.atd || ''}</td><td><span class="read-only-cell pbt">${m.pbt || ''}</span></td>
+            <td><strong>${m.seq}</strong></td>
+            <td><strong>${m.callsign}</strong></td>
+            <td><span class="read-only-cell">${m.etd || ''}</span></td>
+            <td>${m.atd || ''}</td>
+            <td><span class="read-only-cell pbt">${m.pbt || ''}</span></td>
           `;
 
-          tr.onclick = () => {
-            if (appState.viewMode !== 'worksheet') document.getElementById('tabWorksheet').click();
-            if (!appState.visibleTypeIds.includes(m.typeId)) appState.visibleTypeIds.push(m.typeId);
+          tr.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // 1. 切換至工作表視圖
+            if (appState.viewMode !== 'worksheet') {
+              document.getElementById('tabWorksheet').click();
+            }
+
+            // 2. 確保該類型有顯示並切換過去
+            if (!appState.visibleTypeIds.includes(m.typeId)) {
+              appState.visibleTypeIds.push(m.typeId);
+            }
             switchType(m.typeId);
 
-            const targetInput = document.getElementById(`atd-input-${m.index}`);
-            if (targetInput && isEditor) targetInput.focus();
+            // 3. 自動清空並隱藏搜尋欄結果，讓頂部凍結區塊縮回原狀，避免擋住表格
+            document.getElementById('headerSearchInput').value = '';
+            document.getElementById('btnClearSearch').classList.add('hidden');
+            document.getElementById('searchResultArea').classList.add('hidden');
+
+            // 4. 等待畫面收折重繪後，精準定位滾動
+            setTimeout(() => {
+              const targetInput = document.getElementById(`atd-input-${m.index}`);
+              if (targetInput) {
+                // 重點 1：加上 preventScroll: true，防止瀏覽器原生強制滾動造成版面亂跳
+                targetInput.focus({ preventScroll: true });
+
+                const targetRow = targetInput.closest('tr');
+                const tableContainer = targetRow ? targetRow.closest('.table-responsive') : null;
+                const stickyTopPane = document.querySelector('.sticky-top-pane');
+
+                if (tableContainer && targetRow && stickyTopPane) {
+                  // 重點 2：計算精準的捲動位置
+                  // 取得目標列相對於文件最頂端的距離
+                  const rowRect = targetRow.getBoundingClientRect();
+                  const rowAbsoluteTop = rowRect.top + window.scrollY;
+                  
+                  // 取得頂部凍結窗格的高度
+                  const stickyPaneHeight = stickyTopPane.offsetHeight;
+                  
+                  // 取得表格標題列(thead)的高度，如果沒有則預設 40px
+                  const thead = tableContainer.querySelector('thead');
+                  const thHeight = thead ? thead.offsetHeight : 40;
+
+                  // 計算最終需要捲動的 Y 座標：目標位置 - 凍結窗格高度 - 標題列高度 - 一點點緩衝空間(10px)
+                  const targetScrollY = rowAbsoluteTop - stickyPaneHeight - thHeight - 10;
+
+                  // 讓整個視窗捲動到精準位置
+                  window.scrollTo({
+                    top: Math.max(0, targetScrollY),
+                    behavior: 'smooth'
+                  });
+
+                  // 讓表格容器本身的捲軸回到最上方，避免雙重捲動造成的跑版
+                  tableContainer.scrollTo({ top: 0, behavior: 'instant' });
+
+                  // 額外視覺提示：讓該列短暫閃爍淺藍色，方便肉眼快速找到
+                  const originalBg = targetRow.style.backgroundColor;
+                  targetRow.style.transition = 'background-color 0.4s ease';
+                  targetRow.style.backgroundColor = '#bae6fd'; // 淺藍色高亮
+                  setTimeout(() => {
+                    targetRow.style.backgroundColor = originalBg;
+                  }, 800);
+                }
+              }
+            }, 50); // 延遲 50 毫秒確保 DOM 佈局已更新
           };
+
           searchResultTbody.appendChild(tr);
         });
       }
+
       searchResultArea.classList.remove('hidden');
     }
 
+    /* 渲染外層主頁按鈕（僅呈現經多選勾選之流管種類） */
     function renderTypeButtons() {
       const container = document.getElementById('typeButtonsContainer');
-      if (!container) return;
       container.innerHTML = '';
+
       if (!Array.isArray(appState.visibleTypeIds) || appState.visibleTypeIds.length === 0) {
         appState.visibleTypeIds = [appState.activeTypeId];
       }
@@ -1571,6 +2137,7 @@
           const isActive = t.id === appState.activeTypeId;
           btn.className = `btn btn-type-sm ${isActive ? 'active' : ''}`;
           btn.textContent = t.name;
+          btn.setAttribute('aria-label', `切換至 ${t.name} 類型`);
           btn.onclick = () => switchType(t.id);
           container.appendChild(btn);
         }
@@ -1578,32 +2145,10 @@
 
       const activeTypeObj = appState.types.find(t => t.id === appState.activeTypeId);
       document.getElementById('displayActiveType').textContent = activeTypeObj ? activeTypeObj.name : '';
-      renderListActiveTypesCard();
+      renderListFilterButtons();
     }
 
-    function renderListActiveTypesCard() {
-      const cardContainer = document.getElementById('listActiveTypesCardContainer');
-      if (!cardContainer) return;
-      cardContainer.innerHTML = '';
-
-      if (!Array.isArray(appState.visibleTypeIds) || appState.visibleTypeIds.length === 0) {
-        cardContainer.innerHTML = '<span style="color:#64748b; font-size:0.95rem;">目前無選取流管類型</span>';
-        return;
-      }
-
-      appState.types.forEach(t => {
-        if (appState.visibleTypeIds.includes(t.id)) {
-          const badge = document.createElement('span');
-          badge.className = 'active-type-badge';
-          badge.style.fontSize = '0.95rem';
-          badge.style.padding = '3px 12px';
-          badge.style.fontWeight = '900';
-          badge.textContent = t.name;
-          cardContainer.appendChild(badge);
-        }
-      });
-    }
-
+    /* 渲染彈出 Modal 多選面板內容（具備 ✕ 刪除鍵與勾選狀態） */
     function renderModalTypeGrid() {
       const grid = document.getElementById('modalTypeGrid');
       grid.innerHTML = '';
@@ -1620,9 +2165,12 @@
         btn.className = `modal-type-btn ${isSelected ? 'active' : ''}`;
         btn.type = 'button';
         btn.style.width = '100%';
-        if (!t.isDefault && isEditor) btn.style.paddingRight = '24px';
-        btn.textContent = `${t.name} ${isSelected ? '✓' : ''}`;
 
+        if (!t.isDefault) {
+          btn.style.paddingRight = '24px';
+        }
+
+        btn.textContent = `${t.name} ${isSelected ? '✓' : ''}`;
         btn.onclick = () => {
           if (tempSelectedTypeIds.includes(t.id)) {
             tempSelectedTypeIds = tempSelectedTypeIds.filter(id => id !== t.id);
@@ -1631,102 +2179,289 @@
           }
           renderModalTypeGrid();
         };
+
         itemWrap.appendChild(btn);
 
-        if (!t.isDefault && isEditor) {
+        /* 自訂類型：顯示 ✕ 刪除按鈕，並於點擊時顯示二次確認提示 */
+        if (!t.isDefault) {
           const delBtn = document.createElement('button');
-          delBtn.type = 'button'; delBtn.className = 'type-delete-x'; delBtn.textContent = '✕';
+          delBtn.type = 'button';
+          delBtn.className = 'type-delete-x';
+          delBtn.textContent = '✕';
+          delBtn.title = `刪除此自訂類型 (${t.name})`;
           delBtn.onclick = (e) => {
             e.stopPropagation();
+            
             openModal({
-              title: '確認刪除',
-              bodyHTML: `<p>確定要刪除「<strong>${t.name}</strong>」類型嗎？</p>`,
+              title: '確認刪除自訂類型',
+              bodyHTML: `<p>確定要刪除自訂流管類型「<strong>${t.name}</strong>」及其保存的所有資料嗎？</p>`,
               confirmText: '確認刪除',
               onConfirm: () => {
                 delete appState.rows[t.id];
                 appState.types = appState.types.filter(item => item.id !== t.id);
                 appState.visibleTypeIds = appState.visibleTypeIds.filter(id => id !== t.id);
                 tempSelectedTypeIds = tempSelectedTypeIds.filter(id => id !== t.id);
-                if (appState.activeTypeId === t.id) appState.activeTypeId = appState.visibleTypeIds[0] || 'KPL';
-                saveData(true); renderModalTypeGrid(); renderTypeButtons(); renderWorksheet(); return true;
+                appState.selectedHistoryTypes = appState.selectedHistoryTypes.filter(id => id !== t.id);
+
+                if (appState.activeTypeId === t.id) {
+                  appState.activeTypeId = appState.visibleTypeIds[0] || 'KPL';
+                }
+
+                saveData();
+                renderModalTypeGrid();
+                renderTypeButtons();
+                renderWorksheet();
+                return true;
               }
             });
           };
           itemWrap.appendChild(delBtn);
         }
+
         grid.appendChild(itemWrap);
       });
     }
 
     function openTypeModal() {
-      tempSelectedTypeIds = Array.isArray(appState.visibleTypeIds) && appState.visibleTypeIds.length > 0 ? [...appState.visibleTypeIds] : [appState.activeTypeId];
+      tempSelectedTypeIds = Array.isArray(appState.visibleTypeIds) && appState.visibleTypeIds.length > 0 
+        ? [...appState.visibleTypeIds] 
+        : [appState.activeTypeId];
+        
       renderModalTypeGrid();
       document.getElementById('typeSelectorModal').classList.add('active');
     }
 
-    function closeTypeModal() { document.getElementById('typeSelectorModal').classList.remove('active'); }
+    function closeTypeModal() {
+      document.getElementById('typeSelectorModal').classList.remove('active');
+    }
 
     function confirmTypeModal() {
       if (tempSelectedTypeIds.length === 0) {
-        alert('請至少勾選一種流管類型！'); return;
+        openModal({
+          title: '提醒',
+          bodyHTML: '<p class="error-text">請至少勾選一種流管類型！</p>',
+          confirmText: '了解',
+          cancelText: '關閉',
+          onConfirm: () => true
+        });
+        return;
       }
       appState.visibleTypeIds = [...tempSelectedTypeIds];
-      if (!appState.visibleTypeIds.includes(appState.activeTypeId)) appState.activeTypeId = appState.visibleTypeIds[0];
-      saveData(true); renderTypeButtons(); renderWorksheet(); closeTypeModal();
+
+      if (!appState.visibleTypeIds.includes(appState.activeTypeId)) {
+        appState.activeTypeId = appState.visibleTypeIds[0];
+      }
+
+      saveData();
+      renderTypeButtons();
+      renderWorksheet();
+      closeTypeModal();
+    }
+
+    /* 新增自訂類型邏輯 (於 Modal 內部觸發) */
+    function handleAddCustomTypeInModal() {
+      const customTypes = appState.types.filter(t => !t.isDefault);
+      if (customTypes.length >= MAX_CUSTOM_TYPES) {
+        openModal({
+          title: '無法新增類型',
+          bodyHTML: `<p class="error-text">最多只能有 ${MAX_CUSTOM_TYPES} 個自訂類型！</p>`,
+          confirmText: '了解',
+          cancelText: '關閉',
+          onConfirm: () => true
+        });
+        return;
+      }
+
+      openModal({
+        title: '新增自訂類型',
+        bodyHTML: `
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="modalTypeName">請輸入自訂類型名稱：</label>
+            <input type="text" id="modalTypeName" class="input-field" style="width:100%; text-align:left;" placeholder="">
+            <span id="modalError" class="error-text hidden"></span>
+          </div>
+        `,
+        confirmText: '新增',
+        onConfirm: () => {
+          const inputEl = document.getElementById('modalTypeName');
+          const errEl = document.getElementById('modalError');
+          const name = sanitizeCallsign(inputEl.value.trim());
+
+          if (!name) {
+            errEl.textContent = '類型名稱不可為空白';
+            errEl.classList.remove('hidden');
+            return false;
+          }
+
+          const exists = appState.types.some(t => t.name.toLowerCase() === name.toLowerCase());
+          if (exists) {
+            errEl.textContent = '類型名稱不得與既有類型重複';
+            errEl.classList.remove('hidden');
+            return false;
+          }
+
+          const newId = 'custom_' + Date.now();
+          appState.types.push({
+            id: newId,
+            name: name,
+            isDefault: false,
+            minutes: ''
+          });
+          appState.rows[newId] = createEmptyRows();
+
+          if (!tempSelectedTypeIds.includes(newId)) {
+            tempSelectedTypeIds.push(newId);
+          }
+
+          if (!appState.selectedHistoryTypes.includes(newId)) {
+            appState.selectedHistoryTypes.push(newId);
+          }
+
+          saveData();
+          renderModalTypeGrid();
+          return true;
+        }
+      });
+    }
+
+    function renderListFilterButtons() {
+      const container = document.getElementById('listFilterButtonsContainer');
+      container.innerHTML = '';
+
+      const btnAll = document.createElement('button');
+      btnAll.className = `btn btn-type-sm ${appState.listFilter === 'all' ? 'active' : ''}`;
+      btnAll.textContent = '全部類型';
+      btnAll.onclick = () => {
+        appState.listFilter = 'all';
+        saveData();
+        renderTypeButtons();
+        renderList();
+      };
+      container.appendChild(btnAll);
+
+      appState.types.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = `btn btn-type-sm ${appState.listFilter === t.id ? 'active' : ''}`;
+        btn.textContent = t.name;
+        btn.onclick = () => {
+          appState.listFilter = t.id;
+          saveData();
+          renderTypeButtons();
+          renderList();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function showCallsignPopover(inputEl) {
+      activeInputRef = inputEl;
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (!popover || !inputEl) return;
+
+      const wrapper = inputEl.closest('.callsign-cell-wrapper');
+      if (wrapper) {
+        wrapper.appendChild(popover);
+        popover.classList.remove('hidden');
+      }
+    }
+
+    function hideCallsignPopover() {
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (popover) {
+        popover.classList.add('hidden');
+      }
+    }
+
+    function bindCallsignShortcutPopover(inputEl) {
+      inputEl.addEventListener('focus', () => {
+        showCallsignPopover(inputEl);
+      });
+
+      inputEl.addEventListener('blur', () => {
+        setTimeout(() => {
+          if (!isShortcutInteracting && document.activeElement !== activeInputRef) {
+            hideCallsignPopover();
+          }
+        }, 180);
+      });
+    }
+
+    function setupCallsignPopBtns() {
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (!popover) return;
+      const btns = popover.querySelectorAll('.shortcut-pop-btn');
+
+      const handleInsert = (e, text) => {
+        e.preventDefault();
+        if (activeInputRef) {
+          activeInputRef.value += text;
+          activeInputRef.value = activeInputRef.value.toUpperCase();
+          activeInputRef.dispatchEvent(new Event('input', { bubbles: true }));
+          activeInputRef.focus();
+        }
+        hideCallsignPopover();
+      };
+
+      btns.forEach(btn => {
+        btn.addEventListener('touchstart', (e) => {
+          isShortcutInteracting = true;
+          handleInsert(e, btn.textContent.trim());
+        }, { passive: false });
+
+        btn.addEventListener('mousedown', (e) => {
+          isShortcutInteracting = true;
+          handleInsert(e, btn.textContent.trim());
+        });
+
+        btn.addEventListener('touchend', () => {
+          setTimeout(() => { isShortcutInteracting = false; }, 200);
+        });
+
+        btn.addEventListener('mouseup', () => {
+          setTimeout(() => { isShortcutInteracting = false; }, 200);
+        });
+      });
     }
 
     function renderWorksheet() {
       const currentType = appState.types.find(t => t.id === appState.activeTypeId);
       if (!currentType) return;
 
+      const popover = document.getElementById('callsignShortcutPopover');
+      if (popover) {
+        popover.classList.add('hidden');
+        document.body.appendChild(popover);
+      }
+
       const minsInput = document.getElementById('inputMinutes');
       minsInput.value = currentType.minutes;
-      minsInput.readOnly = !isEditor;
+      validateMinutesUI();
 
       const btnDelete = document.getElementById('btnDeleteType');
       const btnRename = document.getElementById('btnRenameType');
-      const btnClearCurrent = document.getElementById('btnClearCurrentData');
-      const btnResetAll = document.getElementById('btnResetAll');
-
-      if (!isEditor) {
+      if (currentType.isDefault) {
         btnDelete.classList.add('hidden');
         btnRename.classList.add('hidden');
-        if (btnClearCurrent) btnClearCurrent.classList.add('hidden');
-        if (btnResetAll) btnResetAll.classList.add('hidden');
       } else {
-        if (btnClearCurrent) btnClearCurrent.classList.remove('hidden');
-        if (btnResetAll) btnResetAll.classList.remove('hidden');
-        if (currentType.isDefault) {
-          btnDelete.classList.add('hidden');
-          btnRename.classList.add('hidden');
-        } else {
-          btnDelete.classList.remove('hidden');
-          btnRename.classList.remove('hidden');
-        }
+        btnDelete.classList.remove('hidden');
+        btnRename.classList.remove('hidden');
       }
 
       const tbody = document.getElementById('worksheetTbody');
       tbody.innerHTML = '';
+
       const rows = appState.rows[appState.activeTypeId];
 
       rows.forEach((row, index) => {
-        const hasCallsign = row.callsign && String(row.callsign).trim() !== '';
-
-        if (!isEditor && !hasCallsign) {
-          return;
-        }
-
         const tr = document.createElement('tr');
 
         const tdX = document.createElement('td');
-        if (isEditor) {
-          const btnX = document.createElement('button');
-          btnX.className = 'btn-x'; btnX.textContent = 'X';
-          btnX.onclick = () => clearRowAndShift(index);
-          tdX.appendChild(btnX);
-        } else {
-          tdX.textContent = '-';
-        }
+        const btnX = document.createElement('button');
+        btnX.className = 'btn-x';
+        btnX.textContent = 'X';
+        btnX.setAttribute('aria-label', `清空第 ${index + 1} 列`);
+        btnX.onclick = () => clearRowAndShift(index);
+        tdX.appendChild(btnX);
 
         const tdSeq = document.createElement('td');
         tdSeq.textContent = index + 1;
@@ -1735,70 +2470,105 @@
         const wrapper = document.createElement('div');
         wrapper.className = 'callsign-cell-wrapper';
 
-        if (isEditor) {
-          const dragHandle = document.createElement('span');
-          dragHandle.className = 'drag-handle'; dragHandle.innerHTML = '⠿';
-          wrapper.draggable = true;
-          wrapper.ondragstart = () => { draggedRowIndex = index; };
-          wrapper.ondragover = (e) => e.preventDefault();
-          wrapper.ondrop = (e) => { e.preventDefault(); if (draggedRowIndex !== null && draggedRowIndex !== index) swapCallsigns(draggedRowIndex, index); };
-          wrapper.appendChild(dragHandle);
-        }
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle';
+        dragHandle.title = '按住拖移以互換呼號';
+        dragHandle.innerHTML = '⠿';
+
+        wrapper.draggable = true;
+        wrapper.ondragstart = (e) => {
+          draggedRowIndex = index;
+          e.dataTransfer.effectAllowed = 'move';
+        };
+        wrapper.ondragover = (e) => {
+          e.preventDefault();
+          wrapper.classList.add('drag-target-over');
+        };
+        wrapper.ondragleave = () => wrapper.classList.remove('drag-target-over');
+        wrapper.ondrop = (e) => {
+          e.preventDefault();
+          wrapper.classList.remove('drag-target-over');
+          if (draggedRowIndex !== null && draggedRowIndex !== index) {
+            swapCallsigns(draggedRowIndex, index);
+            draggedRowIndex = null;
+          }
+        };
+
+        dragHandle.addEventListener('touchstart', (e) => handleTouchStart(e, index), {passive: false});
+        dragHandle.addEventListener('touchmove', handleTouchMove, {passive: false});
+        dragHandle.addEventListener('touchend', handleTouchEnd);
 
         const inputCallsign = document.createElement('input');
-        inputCallsign.type = 'text'; inputCallsign.className = 'table-input';
+        inputCallsign.type = 'text';
+        inputCallsign.className = 'table-input';
         inputCallsign.value = row.callsign;
-        inputCallsign.readOnly = !isEditor;
+        inputCallsign.setAttribute('inputmode', 'text');
+        inputCallsign.setAttribute('autocapitalize', 'characters');
+        inputCallsign.setAttribute('autocomplete', 'off');
+        inputCallsign.setAttribute('spellcheck', 'false');
 
         inputCallsign.oninput = (e) => {
-          if (!isEditor) return;
-          row.callsign = e.target.value.toUpperCase(); e.target.value = e.target.value.toUpperCase();
+          row.callsign = e.target.value.toUpperCase();
+          e.target.value = e.target.value.toUpperCase();
           recalculateType(appState.activeTypeId);
-          saveData(false);
+          saveData();
           updateCalculatedCellsInDOM();
           updateVisualGuidanceState();
+          handleHeaderSearch();
         };
 
-        inputCallsign.onblur = () => {
-          if (!isEditor) return;
-          saveData(true);
-        };
+        bindCallsignShortcutPopover(inputCallsign);
 
-        if (isEditor) bindCallsignShortcutPopover(inputCallsign);
+        wrapper.appendChild(dragHandle);
         wrapper.appendChild(inputCallsign);
         tdCallsign.appendChild(wrapper);
 
+        /* 順序 1 之 STEP ② 引導卡片 */
         const tdEtd = document.createElement('td');
         if (index === 0) {
           const etd1Container = document.createElement('div');
-          etd1Container.style.display = 'flex'; etd1Container.style.alignItems = 'center'; etd1Container.style.gap = '4px';
+          etd1Container.style.display = 'flex';
+          etd1Container.style.alignItems = 'center';
+          etd1Container.style.gap = '4px';
 
           const step2Badge = document.createElement('span');
-          step2Badge.id = 'step2Badge'; step2Badge.className = 'step-pill step-pill-2'; step2Badge.innerHTML = 'STEP ②';
-          if (!isEditor) step2Badge.classList.add('hidden');
+          step2Badge.id = 'step2Badge';
+          step2Badge.className = 'step-pill step-pill-2';
+          step2Badge.innerHTML = 'STEP <span class="step-num">②</span>';
 
           const inputEtd1 = document.createElement('input');
-          inputEtd1.type = 'text'; inputEtd1.id = 'inputEtd1'; inputEtd1.className = 'table-input';
-          inputEtd1.maxLength = 4; inputEtd1.placeholder = 'hhmm'; inputEtd1.value = row.etd;
-          inputEtd1.readOnly = !isEditor;
-
-          inputEtd1.oninput = (e) => {
-            if (!isEditor) return;
-            row.etd = e.target.value;
-            recalculateType(appState.activeTypeId);
-            saveData(false);
-            updateCalculatedCellsInDOM();
-            updateVisualGuidanceState();
-          };
+          inputEtd1.type = 'text';
+          inputEtd1.id = 'inputEtd1';
+          inputEtd1.className = 'table-input';
+          inputEtd1.maxLength = 4;
+          inputEtd1.placeholder = 'hhmm';
+          inputEtd1.value = row.etd;
+          inputEtd1.setAttribute('inputmode', 'numeric');
+          inputEtd1.setAttribute('pattern', '[0-9]*');
+          
+          if (!isValidTime(row.etd)) inputEtd1.classList.add('input-error');
 
           inputEtd1.onblur = (e) => {
-            if (!isEditor) return;
             const normalized = normalizeTimeInput(e.target.value);
-            e.target.value = normalized; row.etd = normalized;
+            e.target.value = normalized;
+            row.etd = normalized;
+            if (!isValidTime(normalized)) inputEtd1.classList.add('input-error');
+            else inputEtd1.classList.remove('input-error');
             recalculateType(appState.activeTypeId);
-            saveData(true);
+            saveData();
             updateCalculatedCellsInDOM();
             updateVisualGuidanceState();
+            handleHeaderSearch();
+          };
+
+          inputEtd1.oninput = (e) => {
+            row.etd = e.target.value;
+            if (isValidTime(e.target.value)) inputEtd1.classList.remove('input-error');
+            recalculateType(appState.activeTypeId);
+            saveData();
+            updateCalculatedCellsInDOM();
+            updateVisualGuidanceState();
+            handleHeaderSearch();
           };
 
           etd1Container.appendChild(step2Badge);
@@ -1806,53 +2576,82 @@
           tdEtd.appendChild(etd1Container);
         } else {
           const spanEtd = document.createElement('span');
-          spanEtd.className = 'read-only-cell'; spanEtd.id = `etd-cell-${index}`; spanEtd.textContent = row.etd;
+          spanEtd.className = 'read-only-cell';
+          spanEtd.id = `etd-cell-${index}`;
+          spanEtd.textContent = row.etd;
           tdEtd.appendChild(spanEtd);
         }
 
         const tdAtd = document.createElement('td');
         const inputAtd = document.createElement('input');
-        inputAtd.type = 'text'; inputAtd.id = `atd-input-${index}`; inputAtd.className = 'table-input';
-        inputAtd.maxLength = 4; inputAtd.placeholder = 'hhmm'; inputAtd.value = row.atd;
-        inputAtd.readOnly = !isEditor;
-
-        inputAtd.oninput = (e) => {
-          if (!isEditor) return;
-          row.atd = e.target.value;
-          recalculateType(appState.activeTypeId);
-          saveData(false);
-          updateCalculatedCellsInDOM();
-        };
+        inputAtd.type = 'text';
+        inputAtd.id = `atd-input-${index}`;
+        inputAtd.className = 'table-input';
+        inputAtd.maxLength = 4;
+        inputAtd.placeholder = 'hhmm';
+        inputAtd.value = row.atd;
+        inputAtd.setAttribute('inputmode', 'numeric');
+        inputAtd.setAttribute('pattern', '[0-9]*');
+        
+        if (!isValidTime(row.atd)) inputAtd.classList.add('input-error');
 
         inputAtd.onblur = (e) => {
-          if (!isEditor) return;
           const normalized = normalizeTimeInput(e.target.value);
-          e.target.value = normalized; row.atd = normalized;
+          e.target.value = normalized;
+          row.atd = normalized;
+          if (!isValidTime(normalized)) inputAtd.classList.add('input-error');
+          else inputAtd.classList.remove('input-error');
           recalculateType(appState.activeTypeId);
-          if (isValidTime(normalized) && normalized !== '') autoLogATD(appState.activeTypeId, index + 1, row.callsign, normalized, row.etd, row.pbt);
-          saveData(true);
+
+          if (isValidTime(normalized) && normalized !== '') {
+            autoLogATD(appState.activeTypeId, index + 1, row.callsign, normalized, row.etd, row.pbt);
+          }
+
+          saveData();
           updateCalculatedCellsInDOM();
+          handleHeaderSearch();
+        };
+
+        inputAtd.oninput = (e) => {
+          row.atd = e.target.value;
+          if (isValidTime(e.target.value)) inputAtd.classList.remove('input-error');
+          recalculateType(appState.activeTypeId);
+
+          if (e.target.value.length === 4 && isValidTime(e.target.value)) {
+            autoLogATD(appState.activeTypeId, index + 1, row.callsign, e.target.value, row.etd, row.pbt);
+          }
+
+          saveData();
+          updateCalculatedCellsInDOM();
+          handleHeaderSearch();
         };
         tdAtd.appendChild(inputAtd);
 
         const tdPbt = document.createElement('td');
         const spanPbt = document.createElement('span');
-        // 🔥 編輯模式維持標準淡藍色 .read-only-cell.pbt
         spanPbt.className = 'read-only-cell pbt';
         spanPbt.id = `pbt-cell-${index}`;
         spanPbt.textContent = row.pbt;
         tdPbt.appendChild(spanPbt);
 
-        tr.appendChild(tdX); tr.appendChild(tdSeq); tr.appendChild(tdCallsign); tr.appendChild(tdEtd); tr.appendChild(tdAtd); tr.appendChild(tdPbt);
+        tr.appendChild(tdX);
+        tr.appendChild(tdSeq);
+        tr.appendChild(tdCallsign);
+        tr.appendChild(tdEtd);
+        tr.appendChild(tdAtd);
+        tr.appendChild(tdPbt);
+
         tbody.appendChild(tr);
       });
 
-      if (isEditor) {
-        const tr51 = document.createElement('tr'); tr51.className = 'cartoon-row-51';
-        const td51 = document.createElement('td'); td51.colSpan = 6; td51.className = 'cartoon-cell-51';
-        td51.innerHTML = '💥 超過 50 撤台！ (OVERFLOW WARNING) 💥';
-        tr51.appendChild(td51); tbody.appendChild(tr51);
-      }
+      const tr51 = document.createElement('tr');
+      tr51.className = 'cartoon-row-51';
+      const td51 = document.createElement('td');
+      td51.colSpan = 6;
+      td51.className = 'cartoon-cell-51';
+      td51.innerHTML = '💥 超過 50 撤台！ (OVERFLOW WARNING) 💥';
+      tr51.appendChild(td51);
+      tbody.appendChild(tr51);
 
       updateVisualGuidanceState();
     }
@@ -1861,109 +2660,79 @@
       const rows = appState.rows[appState.activeTypeId];
       if (!rows) return;
       rows.forEach((row, i) => {
-        if (i > 0) { const etdEl = document.getElementById(`etd-cell-${i}`); if (etdEl) etdEl.textContent = row.etd; }
-        const pbtEl = document.getElementById(`pbt-cell-${i}`); if (pbtEl) pbtEl.textContent = row.pbt;
+        if (i > 0) {
+          const etdEl = document.getElementById(`etd-cell-${i}`);
+          if (etdEl) etdEl.textContent = row.etd;
+        }
+        const pbtEl = document.getElementById(`pbt-cell-${i}`);
+        if (pbtEl) pbtEl.textContent = row.pbt;
       });
     }
 
     function validateMinutesUI() {
       const minsInput = document.getElementById('inputMinutes');
+      const errorSpan = document.getElementById('minutesError');
       const val = minsInput.value.trim();
-      return !(val !== '' && !isValidMinutes(val));
-    }
 
-    /* 🔥 觀看模式 2 欄左右並排卡片，預估後推時間置於呼號與預計起飛時間之間 */
-    function renderList() {
-      const groupedContainer = document.getElementById('listGroupedContainer');
-      const summaryTextEl = document.getElementById('listSummaryText');
-      if (!groupedContainer) return;
-
-      groupedContainer.innerHTML = '';
-
-      const colorThemes = ['theme-blue', 'theme-orange', 'theme-green', 'theme-purple', 'theme-cyan'];
-      let totalCount = 0;
-      let summaryParts = [];
-
-      const targetTypes = Array.isArray(appState.visibleTypeIds) && appState.visibleTypeIds.length > 0
-        ? appState.types.filter(t => appState.visibleTypeIds.includes(t.id))
-        : appState.types;
-
-      const etdText = isEditor ? 'ETD' : '預計起飛時間';
-      const atdText = isEditor ? 'ATD' : '實際起飛時間';
-      const pbtText = isEditor ? '預估後推(ETD-20分)' : '預估後推時間';
-
-      // 🔥 僅在觀看模式套用高亮 CSS 類別，管制員模式則維持標準 class
-      const pbtHeaderClass = isEditor ? '' : 'viewer-mode-pbt-header';
-      const pbtCellClass = isEditor ? '' : 'viewer-mode-pbt-cell';
-
-      targetTypes.forEach((t, themeIdx) => {
-        const rows = appState.rows[t.id] || [];
-        const activeRows = [];
-
-        rows.forEach((r, idx) => {
-          if (r.callsign && String(r.callsign).trim() !== '') {
-            activeRows.push({ ...r, seq: idx + 1 });
-          }
-        });
-
-        if (activeRows.length > 0) {
-          totalCount += activeRows.length;
-          summaryParts.push(`<strong>${t.name}</strong> 共 <strong style="color:#2563eb;">${activeRows.length}</strong> 筆`);
-
-          const themeClass = colorThemes[themeIdx % colorThemes.length];
-          const groupCard = document.createElement('div');
-          groupCard.className = `type-group-wrapper ${themeClass}`;
-
-          let rowsHTML = '';
-          activeRows.forEach(r => {
-            rowsHTML += `
-              <tr>
-                <td style="width:10%;"><strong>${r.seq}</strong></td>
-                <td style="width:22%;"><strong>${r.callsign}</strong></td>
-                <td style="width:24%;"><span class="read-only-cell pbt ${pbtCellClass}">${r.pbt || ''}</span></td>
-                <td style="width:22%;">${r.etd || ''}</td>
-                <td style="width:22%;">${r.atd || ''}</td>
-              </tr>
-            `;
-          });
-
-          groupCard.innerHTML = `
-            <div class="type-group-header">
-              <span>✈️ 流管類別：<span class="active-type-badge" style="font-size:0.92rem; padding:2px 10px; margin:0 4px;">${t.name}</span> (間隔 ${t.minutes || '--'} 分鐘)</span>
-              <span style="font-size:0.88rem; font-weight:bold;">航班數：${activeRows.length} 架</span>
-            </div>
-            <div class="table-responsive" style="border:none; border-radius:0;">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th style="width: 10%;" class="nowrap-text">順序</th>
-                    <th style="width: 22%;" class="nowrap-text">呼號</th>
-                    <th style="width: 24%;" class="nowrap-text ${pbtHeaderClass}">${pbtText}</th>
-                    <th style="width: 22%;" class="nowrap-text">${etdText}</th>
-                    <th style="width: 22%;" class="nowrap-text">${atdText}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rowsHTML}
-                </tbody>
-              </table>
-            </div>
-          `;
-
-          groupedContainer.appendChild(groupCard);
-        }
-      });
-
-      if (totalCount === 0) {
-        summaryTextEl.innerHTML = '目前各流量管制種類無航班資料';
-        groupedContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#64748b; font-weight:bold; background:#f8fafc; border-radius:8px; grid-column: 1 / -1;">目前無任何受影響之流管航班資訊</div>';
+      if (val !== '' && !isValidMinutes(val)) {
+        minsInput.classList.add('input-error');
+        errorSpan.textContent = '請輸入大於或等於 0 的整數';
+        errorSpan.classList.remove('hidden');
+        return false;
       } else {
-        summaryTextEl.innerHTML = `目前 ${summaryParts.join('、')}，總計 <strong style="color:#d97706; font-size:1.15rem;">${totalCount}</strong> 筆受影響航班`;
+        minsInput.classList.remove('input-error');
+        errorSpan.classList.add('hidden');
+        return true;
       }
     }
 
-    function renderCharts(recordsData) {
-      const logs = recordsData || getAllFlightRecords();
+    function renderList() {
+      const tbody = document.getElementById('listTbody');
+      tbody.innerHTML = '';
+
+      let targetTypes = [];
+      if (appState.listFilter === 'all') {
+        targetTypes = appState.types;
+      } else {
+        const found = appState.types.find(t => t.id === appState.listFilter);
+        if (found) targetTypes = [found];
+      }
+
+      let count = 0;
+
+      targetTypes.forEach(t => {
+        const rows = appState.rows[t.id] || [];
+        rows.forEach((r) => {
+          if (r.callsign && String(r.callsign).trim() !== '') {
+            count++;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${t.name}</td>
+              <td>${r.callsign}</td>
+              <td>${r.etd}</td>
+              <td>${r.atd}</td>
+              <td>${r.pbt}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+      });
+
+      document.getElementById('listSummaryText').textContent = `目前列表共有 ${count} 筆資料`;
+    }
+
+    function renderCharts() {
+      const logs = appState.historyLogs || [];
+      const filterDateVal = document.getElementById('filterDate').value;
+      const selectedHour = document.getElementById('filterHourSelect').value;
+
+      let filtered = logs.filter(l => {
+        const matchDate = (!filterDateVal) || (l.date === filterDateVal);
+        const matchHour = (selectedHour === 'all') || (l.atdHour === selectedHour);
+        const matchType = appState.selectedHistoryTypes.includes(l.typeId);
+        return matchDate && matchHour && matchType;
+      });
+
       const barCanvas = document.getElementById('chartHourlyBar');
       if (barCanvas) {
         const ctx = barCanvas.getContext('2d');
@@ -1977,18 +2746,20 @@
         ctx.clearRect(0, 0, w, h);
 
         const hourCounts = new Array(24).fill(0);
-        logs.forEach(l => {
+        filtered.forEach(l => {
           const hr = parseInt(l.atdHour, 10);
           if (!isNaN(hr) && hr >= 0 && hr < 24) hourCounts[hr]++;
         });
 
         const maxVal = Math.max(...hourCounts, 5);
-        let peakHr = -1, peakVal = 0;
+        let peakHr = -1;
+        let peakVal = 0;
         hourCounts.forEach((cnt, idx) => {
           if (cnt > peakVal) { peakVal = cnt; peakHr = idx; }
         });
 
-        const paddingLeft = 30, paddingBottom = 22;
+        const paddingLeft = 30;
+        const paddingBottom = 22;
         const chartW = w - paddingLeft - 10;
         const chartH = h - paddingBottom - 10;
         const barWidth = chartW / 24;
@@ -2007,7 +2778,12 @@
           const x = paddingLeft + i * barWidth + 2;
           const y = (h - paddingBottom) - bH;
 
-          ctx.fillStyle = (i === peakHr && peakVal > 0) ? '#f97316' : '#2563eb';
+          if (i === peakHr && peakVal > 0) {
+            ctx.fillStyle = '#f97316';
+          } else {
+            ctx.fillStyle = '#2563eb';
+          }
+
           ctx.fillRect(x, y, Math.max(2, barWidth - 4), bH);
 
           if (i % 3 === 0) {
@@ -2032,12 +2808,12 @@
         ctx.clearRect(0, 0, w, h);
 
         const typeCounts = {};
-        logs.forEach(l => {
+        filtered.forEach(l => {
           typeCounts[l.typeName] = (typeCounts[l.typeName] || 0) + 1;
         });
 
         const labels = Object.keys(typeCounts);
-        const total = logs.length;
+        const total = filtered.length;
 
         if (total === 0) {
           ctx.fillStyle = '#94a3b8';
@@ -2084,233 +2860,345 @@
           ctx.fillRect(legendX, legendY, 10, 10);
 
           ctx.fillStyle = '#0f172a';
-          ctx.fillText(`${lbl}: ${cnt}架 (${pct}%)`, legendX + 16, legendY + 9);
+          ctx.fillText(`${lbl}: ${cnt}筆 (${pct}%)`, legendX + 16, legendY + 9);
           legendY += 18;
         });
       }
     }
 
     function renderHistoryAndStatistics() {
-      const allRecords = getAllFlightRecords();
-      const filterDateInput = document.getElementById('filterDate');
-      const filterDateVal = filterDateInput ? filterDateInput.value : '';
-      const hourSelect = document.getElementById('filterHourSelect');
-      const selectedHour = hourSelect ? hourSelect.value : 'all';
-
-      let filtered = allRecords.filter(l => {
-        const matchDate = (!filterDateVal) || (l.date === filterDateVal);
-        const matchHour = (selectedHour === 'all') || (l.atdHour === selectedHour);
-        const matchType = (!appState.selectedHistoryTypes || appState.selectedHistoryTypes.length === 0) || (appState.selectedHistoryTypes.includes(l.typeId));
-        return matchDate && matchHour && matchType;
-      });
-
-      const totalCountEl = document.getElementById('statTotalCount');
-      const typesCountEl = document.getElementById('statTypesCount');
-      const peakHourEl = document.getElementById('statPeakHour');
-
-      if (totalCountEl) totalCountEl.textContent = filtered.length;
-      
-      const typeSet = new Set(filtered.map(l => l.typeName));
-      if (typesCountEl) typesCountEl.textContent = typeSet.size;
-
-      const hourCounts = {};
-      filtered.forEach(l => {
-        if (l.atdHour) hourCounts[l.atdHour] = (hourCounts[l.atdHour] || 0) + 1;
-      });
-
-      let peakH = '--', maxC = 0;
-      Object.keys(hourCounts).forEach(h => {
-        if (hourCounts[h] > maxC) { maxC = hourCounts[h]; peakH = h; }
-      });
-      if (peakHourEl) peakHourEl.textContent = peakH !== '--' ? `${peakH}:00 (${maxC}架)` : '--:00';
-
-      const tbody = document.getElementById('historyTbody');
-      if (tbody) {
-        tbody.innerHTML = '';
-        if (filtered.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" style="padding:12px; color:#64748b;">目前尚無符合條件之統計數據</td></tr>';
-        } else {
-          filtered.slice().reverse().forEach(l => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${l.timestamp}</td>
-              <td>${l.date}</td>
-              <td>${l.atdHour}時</td>
-              <td><span class="active-type-badge" style="font-size:0.85rem; padding:2px 6px;">${l.typeName}</span></td>
-              <td>${l.seq}</td>
-              <td><strong>${l.callsign}</strong></td>
-              <td>${l.atd || '-'}</td>
-              <td>${l.etd || '-'}</td>
-              <td><span class="read-only-cell pbt" style="font-size:0.9rem;">${l.pbt || '-'}</span></td>
-            `;
-            tbody.appendChild(tr);
-          });
-        }
-      }
-
-      renderCharts(filtered);
+      const logs = appState.historyLogs || [];
+      renderMultiTypeFilterPills();
+      updateHourDropdown();
+      filterAndRenderHistoryTable();
+      renderCharts();
     }
 
-    /* 🔥 需求 3 修復：排行榜歷史總榜、當月榜、當日榜數據精確切換與運算 */
     function renderLeaderboard() {
-      syncCurrentRowsToHistoryLogs();
-      let allRecords = getAllFlightRecords();
       const container = document.getElementById('leaderboardListContainer');
-      if (!container) return;
+      const logs = appState.historyLogs || [];
       container.innerHTML = '';
 
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const monthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
 
+      let filteredLogs = [];
       if (appState.leaderboardFilter === 'day') {
-        allRecords = allRecords.filter(r => r.date === todayStr);
+        filteredLogs = logs.filter(l => l.date === todayStr);
       } else if (appState.leaderboardFilter === 'month') {
-        allRecords = allRecords.filter(r => r.date && r.date.startsWith(monthStr));
+        filteredLogs = logs.filter(l => l.date && l.date.startsWith(monthStr));
+      } else {
+        filteredLogs = logs;
       }
 
-      if (allRecords.length === 0) {
-        const filterText = appState.leaderboardFilter === 'day' ? '當日' : (appState.leaderboardFilter === 'month' ? '當月' : '歷史');
-        container.innerHTML = `<div style="text-align:center; color:#64748b; padding:30px; font-weight:bold;">當前時間範疇 (${filterText}) 尚無流量管制數據</div>`;
+      if (filteredLogs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:30px; font-weight:bold;">當前時段尚無任何流管歷史紀錄可供排行榜分析</div>';
         return;
       }
 
       const typeStats = {};
-      allRecords.forEach(l => {
-        const name = l.typeName || l.typeId;
-        if (!typeStats[name]) {
-          typeStats[name] = { count: 0, callsigns: new Set(), totalMins: 0 };
+      filteredLogs.forEach(l => {
+        const typeName = l.typeName || l.typeId;
+        if (!typeStats[typeName]) {
+          const typeObj = appState.types.find(t => t.id === l.typeId || t.name === typeName);
+          const mins = typeObj && isValidMinutes(typeObj.minutes) ? parseInt(typeObj.minutes, 10) : 10;
+          typeStats[typeName] = {
+            typeName: typeName,
+            typeId: l.typeId,
+            count: 0,
+            callsigns: new Set(),
+            hours: {},
+            intervalMins: mins,
+            totalDelayMins: 0
+          };
         }
-        typeStats[name].count++;
-        if (l.callsign) typeStats[name].callsigns.add(l.callsign);
-        const m = parseInt(l.minutes, 10);
-        typeStats[name].totalMins += (isNaN(m) ? 10 : m);
+
+        typeStats[typeName].count++;
+        if (l.callsign) typeStats[typeName].callsigns.add(l.callsign);
+        if (l.atdHour) {
+          typeStats[typeName].hours[l.atdHour] = (typeStats[typeName].hours[l.atdHour] || 0) + 1;
+        }
+        typeStats[typeName].totalDelayMins += typeStats[typeName].intervalMins;
       });
 
-      const sorted = Object.keys(typeStats).map(k => ({ name: k, ...typeStats[k] })).sort((a, b) => b.count - a.count);
+      const sortedTypes = Object.values(typeStats).sort((a, b) => b.count - a.count);
       const medalIcons = ['🥇', '🥈', '🥉'];
 
-      sorted.forEach((item, idx) => {
+      sortedTypes.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'lb-card';
-        const medal = idx < 3 ? medalIcons[idx] : `#${idx + 1}`;
+
+        let rankDisplay = index < 3 
+          ? `<span class="lb-rank-badge">${medalIcons[index]}</span>`
+          : `<span class="lb-rank-num">${index + 1}</span>`;
+
+        let peakHr = '--';
+        let maxH = 0;
+        Object.keys(item.hours).forEach(h => {
+          if (item.hours[h] > maxH) {
+            maxH = item.hours[h];
+            peakHr = h;
+          }
+        });
+        const peakHrText = peakHr !== '--' ? `${peakHr}:00` : '--:00';
 
         card.innerHTML = `
           <div class="lb-title-group">
-            <span class="lb-rank-num" style="font-size:1.6rem;">${medal}</span>
+            ${rankDisplay}
             <div>
-              <div class="lb-type-name">${item.name}</div>
-              <div style="font-size:0.8rem; color:#64748b; font-weight:bold;">流量管制航點</div>
+              <div class="lb-type-name">${item.typeName}</div>
+              <div style="font-size:0.8rem; color:#64748b; font-weight:bold;">流管類別代碼: ${item.typeId}</div>
             </div>
           </div>
+
           <div class="lb-stats-group">
             <div class="lb-stat-item">
               <span class="lb-stat-value" style="color:#2563eb;">${item.count} 次</span>
-              <span class="lb-stat-label">管制次數</span>
+              <span class="lb-stat-label">流管次數</span>
             </div>
             <div class="lb-stat-item">
               <span class="lb-stat-value" style="color:#0284c7;">${item.callsigns.size} 架次</span>
-              <span class="lb-stat-label">受影響航班數</span>
+              <span class="lb-stat-label">受影響架次量 (不重複呼號)</span>
             </div>
             <div class="lb-stat-item">
-              <span class="lb-stat-value" style="color:#d97706;">${item.totalMins} 分鐘</span>
-              <span class="lb-stat-label">估算總間隔延誤</span>
+              <span class="lb-stat-value" style="color:#d97706;">${item.totalDelayMins} 分鐘</span>
+              <span class="lb-stat-label">估算累計流管延誤時間</span>
+            </div>
+            <div class="lb-stat-item">
+              <span class="lb-stat-value" style="color:#f97316;">${peakHrText}</span>
+              <span class="lb-stat-label">最高壅塞時段</span>
             </div>
           </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderMultiTypeFilterPills() {
+      const container = document.getElementById('multiTypePillsContainer');
+      container.innerHTML = '';
+
+      const btnAll = document.createElement('button');
+      const isAllSelected = appState.types.length > 0 && appState.types.every(t => appState.selectedHistoryTypes.includes(t.id));
+      btnAll.className = `btn-filter-pill ${isAllSelected ? 'active' : ''}`;
+      btnAll.textContent = 'ALL (全選)';
+      btnAll.onclick = () => {
+        if (isAllSelected) {
+          appState.selectedHistoryTypes = [];
+        } else {
+          appState.selectedHistoryTypes = appState.types.map(t => t.id);
+        }
+        saveData();
+        renderMultiTypeFilterPills();
+        updateHourDropdown();
+        filterAndRenderHistoryTable();
+        renderCharts();
+      };
+      container.appendChild(btnAll);
+
+      appState.types.forEach(t => {
+        const btn = document.createElement('button');
+        const isSelected = appState.selectedHistoryTypes.includes(t.id);
+        btn.className = `btn-filter-pill ${isSelected ? 'active' : ''}`;
+        btn.textContent = `${t.name} ${isSelected ? '✓' : '+'}`;
+        
+        btn.onclick = () => {
+          if (isSelected) {
+            appState.selectedHistoryTypes = appState.selectedHistoryTypes.filter(id => id !== t.id);
+          } else {
+            appState.selectedHistoryTypes.push(t.id);
+          }
+          saveData();
+          renderMultiTypeFilterPills();
+          updateHourDropdown();
+          filterAndRenderHistoryTable();
+          renderCharts();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function updateHourDropdown() {
+      const logs = appState.historyLogs || [];
+      const filterDateVal = document.getElementById('filterDate').value;
+
+      let filtered = logs.filter(l => {
+        const matchDate = (!filterDateVal) || (l.date === filterDateVal);
+        const matchType = appState.selectedHistoryTypes.includes(l.typeId);
+        return matchDate && matchType;
+      });
+
+      const hourSelect = document.getElementById('filterHourSelect');
+      const currentHourVal = hourSelect.value || 'all';
+
+      const uniqueHours = [...new Set(filtered.map(l => l.atdHour).filter(h => h && h.length === 2))].sort();
+
+      hourSelect.innerHTML = '<option value="all">全日彙整</option>';
+
+      uniqueHours.forEach(h => {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = `${h} 時`;
+        hourSelect.appendChild(opt);
+      });
+
+      if (uniqueHours.includes(currentHourVal)) {
+        hourSelect.value = currentHourVal;
+      } else {
+        hourSelect.value = 'all';
+      }
+    }
+
+    function filterAndRenderHistoryTable() {
+      const logs = appState.historyLogs || [];
+      const filterDateVal = document.getElementById('filterDate').value;
+      const selectedHour = document.getElementById('filterHourSelect').value;
+
+      let filtered = logs.filter(l => {
+        const matchDate = (!filterDateVal) || (l.date === filterDateVal);
+        const matchHour = (selectedHour === 'all') || (l.atdHour === selectedHour);
+        const matchType = appState.selectedHistoryTypes.includes(l.typeId);
+        return matchDate && matchHour && matchType;
+      });
+
+      document.getElementById('statTotalCount').textContent = filtered.length;
+      const typeSet = new Set(filtered.map(l => l.typeName));
+      document.getElementById('statTypesCount').textContent = typeSet.size;
+
+      const hourCounts = {};
+      filtered.forEach(l => {
+        if (l.atdHour) {
+          hourCounts[l.atdHour] = (hourCounts[l.atdHour] || 0) + 1;
+        }
+      });
+      let peakH = '--';
+      let maxC = 0;
+      Object.keys(hourCounts).forEach(h => {
+        if (hourCounts[h] > maxC) {
+          maxC = hourCounts[h];
+          peakH = h;
+        }
+      });
+      document.getElementById('statPeakHour').textContent = peakH !== '--' ? `${peakH}:00 (${maxC}筆)` : '--:00';
+
+      const tbody = document.getElementById('historyTbody');
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="padding:12px; color:#64748b;">目前尚無符合篩選條件之歷史紀錄</td></tr>';
+        return;
+      }
+
+      filtered.slice().reverse().forEach(l => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${l.timestamp}</td>
+          <td>${l.date}</td>
+          <td>${l.atdHour}時</td>
+          <td><span class="active-type-badge" style="font-size:0.85rem; padding:2px 6px; background-color:#2563eb;">${l.typeName}</span></td>
+          <td>${l.seq}</td>
+          <td><strong>${l.callsign}</strong></td>
+          <td>${l.atd || ''}</td>
+          <td>${l.etd || ''}</td>
+          <td>${l.pbt || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderShiftLogs() {
+      const container = document.getElementById('shiftLogContainer');
+      const logs = appState.shiftLogs || [];
+      container.innerHTML = '';
+
+      if (logs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px; font-weight:bold;">目前尚無班務交接或事件記錄留言</div>';
+        return;
+      }
+
+      const catMap = {
+        routine: { text: '常規交接', class: 'tag-routine' },
+        flow: { text: '流管告警', class: 'tag-flow' },
+        weather: { text: '天候影響', class: 'tag-weather' },
+        equip: { text: '設備異常', class: 'tag-equip' },
+        other: { text: '心得/其他', class: 'tag-other' }
+      };
+
+      logs.slice().reverse().forEach(log => {
+        const card = document.createElement('div');
+        card.className = 'shift-log-card';
+        const catInfo = catMap[log.category] || catMap.other;
+
+        card.innerHTML = `
+          <div class="shift-log-header">
+            <div>
+              <span class="tag-badge ${catInfo.class}">${catInfo.text}</span>
+              <strong style="color:#0f2a4a; margin-left:6px; font-size:0.95rem;">${log.author || '值班管制員'}</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span>${log.timestamp}</span>
+              <button class="btn-x" style="padding:1px 6px; font-size:0.8rem;" onclick="deleteShiftLog('${log.id}')">刪除</button>
+            </div>
+          </div>
+          <div class="shift-log-body">${log.content}</div>
         `;
         container.appendChild(card);
       });
     }
 
-    /* 匯出歷史紀錄 CSV / Excel 報表 */
-    function exportHistoryCSV() {
-      const allRecords = getAllFlightRecords();
-      if (allRecords.length === 0) {
-        alert('目前尚無任何流管資料可供匯出！');
-        return;
-      }
-
-      const filterDateInput = document.getElementById('filterDate');
-      const filterDateVal = filterDateInput ? filterDateInput.value : '';
-      const hourSelect = document.getElementById('filterHourSelect');
-      const selectedHour = hourSelect ? hourSelect.value : 'all';
-
-      let filtered = allRecords.filter(l => {
-        const matchDate = (!filterDateVal) || (l.date === filterDateVal);
-        const matchHour = (selectedHour === 'all') || (l.atdHour === selectedHour);
-        const matchType = (!appState.selectedHistoryTypes || appState.selectedHistoryTypes.length === 0) || (appState.selectedHistoryTypes.includes(l.typeId));
-        return matchDate && matchHour && matchType;
-      });
-
-      if (filtered.length === 0) {
-        alert('當前篩選條件下無符合之紀錄可匯出！');
-        return;
-      }
-
-      const etdText = isEditor ? 'ETD' : '預計起飛時間';
-      const atdText = isEditor ? 'ATD' : '實際起飛時間';
-      const pbtText = isEditor ? '預估後推(ETD-20分)' : '預估後推時間';
-
-      let csvContent = `\uFEFF"紀錄時間","日期","時段","流管類型","順序","呼號","${pbtText}","${etdText}","${atdText}"\n`;
-
-      filtered.forEach(l => {
-        const formatTime = (v) => (v && v.length === 4 ? `${v.slice(0,2)}:${v.slice(2,4)}` : (v || ''));
-        csvContent += `"${l.timestamp}","${l.date}","${l.atdHour}時","${l.typeName}","${l.seq}","${l.callsign}","${formatTime(l.pbt)}","${formatTime(l.etd)}","${formatTime(l.atd)}"\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `塔臺流量管制作業數據報表_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function renderShiftLogs() {
-      const container = document.getElementById('shiftLogContainer');
-      if (!container) return;
-      container.innerHTML = '';
-      (appState.shiftLogs || []).slice().reverse().forEach(log => {
-        const card = document.createElement('div'); card.className = 'shift-log-card';
-        card.innerHTML = `<div class="shift-log-header"><strong>${log.author}</strong><span>${log.timestamp}</span></div><div class="shift-log-body">${log.content}</div>`;
-        container.appendChild(card);
-      });
-    }
-
     function addShiftLog() {
-      if (!isEditor) return;
-      const content = document.getElementById('shiftContentInput').value.trim();
-      if (!content) return;
-      appState.shiftLogs.push({ id: 'shift_' + Date.now(), timestamp: new Date().toLocaleString(), author: document.getElementById('shiftAuthorInput').value || 'ATCO', content: content });
-      saveData(true); renderShiftLogs(); document.getElementById('shiftContentInput').value = '';
+      const authorInput = document.getElementById('shiftAuthorInput');
+      const catSelect = document.getElementById('shiftCategorySelect');
+      const contentInput = document.getElementById('shiftContentInput');
+
+      const author = authorInput.value.trim() || '值班管制員';
+      const category = catSelect.value || 'routine';
+      const content = contentInput.value.trim();
+
+      if (!content) {
+        alert('請輸入交接內容或事件留言！');
+        return;
+      }
+
+      const now = new Date();
+      const timestampStr = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0');
+
+      const newLog = {
+        id: 'shift_' + Date.now(),
+        timestamp: timestampStr,
+        author: author,
+        category: category,
+        content: content
+      };
+
+      appState.shiftLogs = appState.shiftLogs || [];
+      appState.shiftLogs.push(newLog);
+      saveData();
+
+      contentInput.value = '';
+      renderShiftLogs();
     }
 
-    function switchType(typeId) {
-      appState.activeTypeId = typeId;
-      recalculateType(typeId); saveData(false); renderTypeButtons(); renderWorksheet();
-    }
+    window.deleteShiftLog = function(logId) {
+      if (confirm('確定要刪除這筆班務記錄嗎？')) {
+        appState.shiftLogs = appState.shiftLogs.filter(l => l.id !== logId);
+        saveData();
+        renderShiftLogs();
+      }
+    };
 
-    function openModal({ title, bodyHTML, confirmText = '確認', cancelText = '取消', onConfirm }) {
-      const modal = document.getElementById('appModal');
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalBody').innerHTML = bodyHTML;
-      const btnConfirm = document.getElementById('btnModalConfirm');
-      const btnCancel = document.getElementById('btnModalCancel');
-      btnConfirm.textContent = confirmText; btnCancel.textContent = cancelText;
-
-      const closeModal = () => { modal.classList.remove('active'); btnConfirm.onclick = null; btnCancel.onclick = null; };
-      btnCancel.onclick = closeModal;
-      btnConfirm.onclick = () => { if (onConfirm()) closeModal(); };
-      modal.classList.add('active');
-    }
-
-    function openLoginModal() {
-      if (!isFirebaseConfigured) {
+    function exportHistoryCSV() {
+      const logs = appState.historyLogs || [];
+      if (logs.length === 0) {
         openModal({
-          title: '⚠️ 尚未設定 Firebase',
-          bodyHTML: '<p style="color:#dc2626;">請先在 HTML 程式碼內的 <code>firebaseConfig</code> 填入您個人的 Firebase 金鑰資訊！</p>',
+          title: '無法匯出',
+          bodyHTML: '<p class="error-text">目前尚無任何歷史紀錄可供匯出！</p>',
           confirmText: '了解',
           cancelText: '關閉',
           onConfirm: () => true
@@ -2318,196 +3206,295 @@
         return;
       }
 
-      openModal({
-        title: '🔑 管制員登入',
-        bodyHTML: `
-          <div style="display:flex; flex-direction:column; gap:10px;">
-            <label style="font-weight:bold;">管制員 Email：</label>
-            <input type="email" id="loginEmail" class="input-field" style="width:100%; text-align:left;" placeholder="your-email@tower.com">
-            <label style="font-weight:bold;">密碼：</label>
-            <input type="password" id="loginPassword" class="input-field" style="width:100%; text-align:left;" placeholder="••••••••">
-            <span id="loginError" class="error-text hidden"></span>
-          </div>
-        `,
-        confirmText: '登入',
-        onConfirm: () => {
-          const email = document.getElementById('loginEmail').value.trim();
-          const password = document.getElementById('loginPassword').value.trim();
-          const errEl = document.getElementById('loginError');
+      const filterDateVal = document.getElementById('filterDate').value;
+      const selectedHour = document.getElementById('filterHourSelect').value;
 
-          if (!email || !password) {
-            errEl.textContent = '請輸入 Email 與密碼';
-            errEl.classList.remove('hidden');
-            return false;
-          }
-
-          const btnConfirm = document.getElementById('btnModalConfirm');
-          btnConfirm.disabled = true;
-          btnConfirm.textContent = '驗證中...';
-
-          firebase.auth().signInWithEmailAndPassword(email, password)
-            .then(() => {
-              btnConfirm.disabled = false;
-              document.getElementById('appModal').classList.remove('active');
-            })
-            .catch(err => {
-              btnConfirm.disabled = false;
-              btnConfirm.textContent = '登入';
-              errEl.textContent = '登入失敗：' + (err.message || '帳號或密碼錯誤');
-              errEl.classList.remove('hidden');
-            });
-
-          return false;
-        }
+      let filtered = logs.filter(l => {
+        const matchDate = (!filterDateVal) || (l.date === filterDateVal);
+        const matchHour = (selectedHour === 'all') || (l.atdHour === selectedHour);
+        const matchType = appState.selectedHistoryTypes.includes(l.typeId);
+        return matchDate && matchHour && matchType;
       });
-    }
 
-    /* 呼號捷徑選單彈出與安定監聽 */
-    function showCallsignPopover(inputEl) {
-      if (!isEditor) return;
-      activeInputRef = inputEl;
-      const popover = document.getElementById('callsignShortcutPopover');
-      const wrapper = inputEl.closest('.callsign-cell-wrapper');
-      if (wrapper && popover) {
-        wrapper.appendChild(popover);
-        popover.classList.remove('hidden');
+      if (filtered.length === 0) {
+        openModal({
+          title: '無符合資料',
+          bodyHTML: '<p class="error-text">當前篩選條件下無歷史紀錄可匯出！</p>',
+          confirmText: '了解',
+          cancelText: '關閉',
+          onConfirm: () => true
+        });
+        return;
       }
-    }
 
-    function hideCallsignPopover() {
-      const popover = document.getElementById('callsignShortcutPopover');
-      if (popover) popover.classList.add('hidden');
-    }
-
-    function bindCallsignShortcutPopover(inputEl) {
-      if (!isEditor) return;
-      const handler = (e) => {
-        showCallsignPopover(inputEl);
+      const formatTimeWithColon = (hhmm) => {
+        if (!hhmm || hhmm.length !== 4) return hhmm || '';
+        return `${hhmm.slice(0, 2)}:${hhmm.slice(2, 4)}`;
       };
 
-      inputEl.addEventListener('focus', handler);
-      inputEl.addEventListener('click', handler);
-      inputEl.addEventListener('pointerdown', handler);
+      let csvContent = '\uFEFF"紀錄時間","日期","時","類型","順序","呼號","ATD","ETD","預估後推"\n';
+      
+      filtered.forEach(l => {
+        const atdVal = l.atd ? formatTimeWithColon(l.atd) : '';
+        const etdVal = l.etd ? formatTimeWithColon(l.etd) : '';
+        const pbtVal = l.pbt ? formatTimeWithColon(l.pbt) : '';
 
-      inputEl.addEventListener('blur', () => {
-        setTimeout(() => {
-          if (!isShortcutInteracting && document.activeElement !== activeInputRef) {
-            hideCallsignPopover();
-          }
-        }, 200);
+        csvContent += `"${l.timestamp}","${l.date}","${l.atdHour}時","${l.typeName}","${l.seq}","${l.callsign}","${atdVal}","${etdVal}","${pbtVal}"\n`;
       });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `流管時間歷史紀錄匯出_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
-    function setupCallsignPopBtns() {
-      const popover = document.getElementById('callsignShortcutPopover');
-      if (!popover) return;
-      const btns = popover.querySelectorAll('.shortcut-pop-btn');
+    function switchType(typeId) {
+      appState.activeTypeId = typeId;
+      recalculateType(typeId);
+      saveData();
+      renderTypeButtons();
+      renderWorksheet();
+      handleHeaderSearch();
+    }
 
-      btns.forEach(btn => {
-        const handleInsert = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          isShortcutInteracting = true;
-          const text = btn.textContent.trim();
-          if (activeInputRef && isEditor) {
-            activeInputRef.value += text;
-            activeInputRef.value = activeInputRef.value.toUpperCase();
-            activeInputRef.dispatchEvent(new Event('input', { bubbles: true }));
-            activeInputRef.focus();
-          }
-          setTimeout(() => { isShortcutInteracting = false; }, 200);
-        };
+    function openModal({ title, bodyHTML, confirmText = '確認', cancelText = '取消', onConfirm }) {
+      const modal = document.getElementById('appModal');
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = bodyHTML;
 
-        btn.onmousedown = handleInsert;
-        btn.ontouchstart = handleInsert;
-      });
+      const btnConfirm = document.getElementById('btnModalConfirm');
+      const btnCancel = document.getElementById('btnModalCancel');
+
+      btnConfirm.textContent = confirmText;
+      btnCancel.textContent = cancelText;
+
+      const closeModal = () => {
+        modal.classList.remove('active');
+        btnConfirm.onclick = null;
+        btnCancel.onclick = null;
+      };
+
+      btnCancel.onclick = closeModal;
+      btnConfirm.onclick = () => {
+        if (onConfirm()) {
+          closeModal();
+        }
+      };
+
+      modal.classList.add('active');
     }
 
     function setupEventListeners() {
+      const handleGlobalClickToBlur = (e) => {
+        const isInteractive = e.target.closest('input, select, textarea, button, .shortcut-pop-btn, .drag-handle, .modal-card, .search-result-card');
+        if (!isInteractive && document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+          hideCallsignPopover();
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      };
+
+      document.addEventListener('pointerdown', handleGlobalClickToBlur);
+
+      const headerSearchInput = document.getElementById('headerSearchInput');
+      const btnClearSearch = document.getElementById('btnClearSearch');
+
+      headerSearchInput.oninput = handleHeaderSearch;
+      btnClearSearch.onclick = () => {
+        headerSearchInput.value = '';
+        handleHeaderSearch();
+      };
+
+      headerSearchInput.addEventListener('focus', hideCallsignPopover);
+
+      /* 選擇流管類型 Modal 事件觸發 */
       document.getElementById('btnOpenTypeModal').onclick = openTypeModal;
       document.getElementById('btnCloseTypeModal').onclick = closeTypeModal;
       document.getElementById('btnCancelTypeModal').onclick = closeTypeModal;
       document.getElementById('btnConfirmTypeModal').onclick = confirmTypeModal;
-      document.getElementById('btnAddCustomTypeModal').onclick = () => {
+      document.getElementById('btnAddCustomTypeModal').onclick = handleAddCustomTypeInModal;
+
+      const minsInput = document.getElementById('inputMinutes');
+      minsInput.addEventListener('focus', hideCallsignPopover);
+      minsInput.oninput = (e) => {
+        const val = e.target.value.trim();
+        const currentType = appState.types.find(t => t.id === appState.activeTypeId);
+        if (currentType) {
+          currentType.minutes = val;
+          if (validateMinutesUI()) {
+            recalculateType(appState.activeTypeId);
+            saveData();
+            updateCalculatedCellsInDOM();
+            updateVisualGuidanceState();
+            handleHeaderSearch();
+          }
+        }
+      };
+
+      document.getElementById('btnRenameType').onclick = () => {
+        const currentType = appState.types.find(t => t.id === appState.activeTypeId);
+        if (!currentType || currentType.isDefault) return;
+
         openModal({
-          title: '新增自訂類型',
-          bodyHTML: '<input type="text" id="modalTypeName" class="input-field" style="width:100%; text-align:left;">',
-          confirmText: '新增',
+          title: '重新命名類型',
+          bodyHTML: `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label for="modalRename">請輸入新的類型名稱：</label>
+              <input type="text" id="modalRename" class="input-field" style="width:100%; text-align:left;" value="${currentType.name}">
+              <span id="modalRenameError" class="error-text hidden"></span>
+            </div>
+          `,
+          confirmText: '儲存',
           onConfirm: () => {
-            const name = document.getElementById('modalTypeName').value.trim();
-            if (!name) return false;
-            const newId = 'custom_' + Date.now();
-            appState.types.push({ id: newId, name: name, isDefault: false, minutes: '' });
-            appState.rows[newId] = createEmptyRows();
-            tempSelectedTypeIds.push(newId);
-            saveData(true); renderModalTypeGrid(); return true;
+            const inputEl = document.getElementById('modalRename');
+            const errEl = document.getElementById('modalRenameError');
+            const name = sanitizeCallsign(inputEl.value.trim());
+
+            if (!name) {
+              errEl.textContent = '類型名稱不可為空白';
+              errEl.classList.remove('hidden');
+              return false;
+            }
+
+            const exists = appState.types.some(t => t.id !== currentType.id && t.name.toLowerCase() === name.toLowerCase());
+            if (exists) {
+              errEl.textContent = '類型名稱不得與既有類型重複';
+              errEl.classList.remove('hidden');
+              return false;
+            }
+
+            currentType.name = name;
+            saveData();
+            renderTypeButtons();
+            return true;
           }
         });
       };
 
-      document.getElementById('btnLoginHeader').onclick = openLoginModal;
-      document.getElementById('btnLogoutHeader').onclick = () => {
-        if (confirm('確定要登出編輯模式嗎？')) {
-          if (isFirebaseConfigured && firebase.apps.length) firebase.auth().signOut();
-        }
-      };
-
-      document.getElementById('inputMinutes').oninput = (e) => {
-        if (!isEditor) return;
+      document.getElementById('btnDeleteType').onclick = () => {
         const currentType = appState.types.find(t => t.id === appState.activeTypeId);
-        if (currentType) {
-          currentType.minutes = e.target.value.trim();
-          recalculateType(appState.activeTypeId);
-          saveData(false);
-          updateCalculatedCellsInDOM();
-          updateVisualGuidanceState();
-        }
+        if (!currentType || currentType.isDefault) return;
+
+        openModal({
+          title: '確認刪除類型',
+          bodyHTML: `<p>確定要刪除「<strong>${currentType.name}</strong>」及其保存的所有資料嗎？</p>`,
+          confirmText: '確認刪除',
+          onConfirm: () => {
+            delete appState.rows[currentType.id];
+            appState.types = appState.types.filter(t => t.id !== currentType.id);
+            appState.visibleTypeIds = appState.visibleTypeIds.filter(id => id !== currentType.id);
+            appState.selectedHistoryTypes = appState.selectedHistoryTypes.filter(id => id !== currentType.id);
+            
+            if (appState.visibleTypeIds.length === 0) appState.visibleTypeIds = ['KPL'];
+            appState.activeTypeId = appState.visibleTypeIds[0];
+
+            saveData();
+            renderTypeButtons();
+            renderWorksheet();
+            return true;
+          }
+        });
       };
 
-      document.getElementById('inputMinutes').onblur = () => {
-        if (!isEditor) return;
-        saveData(true);
+      document.getElementById('btnClearCurrentData').onclick = () => {
+        const currentType = appState.types.find(t => t.id === appState.activeTypeId);
+        if (!currentType) return;
+
+        openModal({
+          title: '清除目前類型資料',
+          bodyHTML: `<p>確定要清除「<strong>${currentType.name}</strong>」的流管時間間隔及所有 50 列資料嗎？</p>`,
+          confirmText: '確認清除',
+          onConfirm: () => {
+            currentType.minutes = '';
+            appState.rows[currentType.id] = createEmptyRows();
+            recalculateType(currentType.id);
+            saveData();
+            renderWorksheet();
+            handleHeaderSearch();
+            return true;
+          }
+        });
       };
 
-      document.getElementById('btnAddShiftLog').onclick = addShiftLog;
-      document.getElementById('btnExportCSV').onclick = exportHistoryCSV;
+      document.getElementById('btnResetAll').onclick = () => {
+        openModal({
+          title: '重置所有資料',
+          bodyHTML: `<p style="color:#dc2626; font-weight:bold;">確定要清除所有工作表內已填入的資料及刪除自訂新增流管類型嗎?</p>`,
+          confirmText: '全部重置',
+          onConfirm: () => {
+            appState = createDefaultState();
+            appState.types.forEach(t => recalculateType(t.id));
+            saveData();
+            renderTypeButtons();
+            renderWorksheet();
+            handleHeaderSearch();
+            return true;
+          }
+        });
+      };
+
+      document.getElementById('filterDate').onchange = () => {
+        updateHourDropdown();
+        filterAndRenderHistoryTable();
+        renderCharts();
+      };
 
       document.getElementById('btnClearDateFilter').onclick = () => {
-        const filterDateInput = document.getElementById('filterDate');
-        if (filterDateInput) filterDateInput.value = '';
-        renderHistoryAndStatistics();
+        document.getElementById('filterDate').value = '';
+        updateHourDropdown();
+        filterAndRenderHistoryTable();
+        renderCharts();
       };
 
-      /* 排行榜當月榜、當日榜與全榜切換按鈕監聽 */
+      document.getElementById('filterHourSelect').onchange = () => {
+        filterAndRenderHistoryTable();
+        renderCharts();
+      };
+
+      document.getElementById('btnExportCSV').onclick = exportHistoryCSV;
+
+      // 班務交接監聽
+      document.getElementById('btnAddShiftLog').onclick = addShiftLog;
+      document.getElementById('btnClearAllShiftLogs').onclick = () => {
+        if (confirm('確定要清空所有班務交接記錄嗎？此操作無法復原。')) {
+          appState.shiftLogs = [];
+          saveData();
+          renderShiftLogs();
+        }
+      };
+
+      // 排行榜按鈕監聽
       const btnLbAll = document.getElementById('btnLbAll');
       const btnLbMonth = document.getElementById('btnLbMonth');
       const btnLbDay = document.getElementById('btnLbDay');
 
-      if (btnLbAll && btnLbMonth && btnLbDay) {
-        btnLbAll.onclick = () => {
-          appState.leaderboardFilter = 'all';
-          btnLbAll.className = 'btn-filter-pill active';
-          btnLbMonth.className = 'btn-filter-pill';
-          btnLbDay.className = 'btn-filter-pill';
-          renderLeaderboard();
-        };
+      btnLbAll.onclick = () => {
+        appState.leaderboardFilter = 'all';
+        btnLbAll.className = 'btn-filter-pill active';
+        btnLbMonth.className = 'btn-filter-pill';
+        btnLbDay.className = 'btn-filter-pill';
+        renderLeaderboard();
+      };
 
-        btnLbMonth.onclick = () => {
-          appState.leaderboardFilter = 'month';
-          btnLbAll.className = 'btn-filter-pill';
-          btnLbMonth.className = 'btn-filter-pill active';
-          btnLbDay.className = 'btn-filter-pill';
-          renderLeaderboard();
-        };
+      btnLbMonth.onclick = () => {
+        appState.leaderboardFilter = 'month';
+        btnLbAll.className = 'btn-filter-pill';
+        btnLbMonth.className = 'btn-filter-pill active';
+        btnLbDay.className = 'btn-filter-pill';
+        renderLeaderboard();
+      };
 
-        btnLbDay.onclick = () => {
-          appState.leaderboardFilter = 'day';
-          btnLbAll.className = 'btn-filter-pill';
-          btnLbMonth.className = 'btn-filter-pill';
-          btnLbDay.className = 'btn-filter-pill active';
-          renderLeaderboard();
-        };
-      }
+      btnLbDay.onclick = () => {
+        appState.leaderboardFilter = 'day';
+        btnLbAll.className = 'btn-filter-pill';
+        btnLbMonth.className = 'btn-filter-pill';
+        btnLbDay.className = 'btn-filter-pill active';
+        renderLeaderboard();
+      };
 
       const tabWorksheet = document.getElementById('tabWorksheet');
       const tabList = document.getElementById('tabList');
@@ -2521,70 +3508,110 @@
       const leaderboardView = document.getElementById('leaderboardView');
       const shiftLogView = document.getElementById('shiftLogView');
 
+      const settingsBar = document.getElementById('settingsBar');
+      const typeSelectionBar = document.getElementById('typeSelectionBar');
+
       tabWorksheet.onclick = () => {
-        if (!isEditor) return;
         appState.viewMode = 'worksheet';
-        [tabWorksheet, tabList, tabHistory, tabLeaderboard, tabShiftLog].forEach(t => t.classList.remove('active'));
         tabWorksheet.classList.add('active');
-        [worksheetView, listView, historyView, leaderboardView, shiftLogView].forEach(v => v.classList.add('hidden'));
+        tabList.classList.remove('active');
+        tabHistory.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
+        tabShiftLog.classList.remove('active');
+
         worksheetView.classList.remove('hidden');
-        updateTypeSelectionBarVisibility();
+        settingsBar.classList.remove('hidden');
+        typeSelectionBar.classList.remove('hidden');
+        listView.classList.add('hidden');
+        historyView.classList.add('hidden');
+        leaderboardView.classList.add('hidden');
+        shiftLogView.classList.add('hidden');
         renderWorksheet();
       };
 
       tabList.onclick = () => {
+        hideCallsignPopover();
         appState.viewMode = 'list';
-        [tabWorksheet, tabList, tabHistory, tabLeaderboard, tabShiftLog].forEach(t => t.classList.remove('active'));
         tabList.classList.add('active');
-        [worksheetView, listView, historyView, leaderboardView, shiftLogView].forEach(v => v.classList.add('hidden'));
+        tabWorksheet.classList.remove('active');
+        tabHistory.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
+        tabShiftLog.classList.remove('active');
+
+        worksheetView.classList.add('hidden');
+        settingsBar.classList.add('hidden');
+        typeSelectionBar.classList.add('hidden');
         listView.classList.remove('hidden');
-        updateTypeSelectionBarVisibility();
+        historyView.classList.add('hidden');
+        leaderboardView.classList.add('hidden');
+        shiftLogView.classList.add('hidden');
         renderList();
       };
 
       tabHistory.onclick = () => {
-        if (!isEditor) return;
+        hideCallsignPopover();
         appState.viewMode = 'history';
-        [tabWorksheet, tabList, tabHistory, tabLeaderboard, tabShiftLog].forEach(t => t.classList.remove('active'));
         tabHistory.classList.add('active');
-        [worksheetView, listView, historyView, leaderboardView, shiftLogView].forEach(v => v.classList.add('hidden'));
+        tabWorksheet.classList.remove('active');
+        tabList.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
+        tabShiftLog.classList.remove('active');
+
+        worksheetView.classList.add('hidden');
+        settingsBar.classList.add('hidden');
+        typeSelectionBar.classList.add('hidden');
+        listView.classList.add('hidden');
         historyView.classList.remove('hidden');
-        updateTypeSelectionBarVisibility();
+        leaderboardView.classList.add('hidden');
+        shiftLogView.classList.add('hidden');
         renderHistoryAndStatistics();
       };
 
       tabLeaderboard.onclick = () => {
-        if (!isEditor) return;
+        hideCallsignPopover();
         appState.viewMode = 'leaderboard';
-        [tabWorksheet, tabList, tabHistory, tabLeaderboard, tabShiftLog].forEach(t => t.classList.remove('active'));
         tabLeaderboard.classList.add('active');
-        [worksheetView, listView, historyView, leaderboardView, shiftLogView].forEach(v => v.classList.add('hidden'));
+        tabWorksheet.classList.remove('active');
+        tabList.classList.remove('active');
+        tabHistory.classList.remove('active');
+        tabShiftLog.classList.remove('active');
+
+        worksheetView.classList.add('hidden');
+        settingsBar.classList.add('hidden');
+        typeSelectionBar.classList.add('hidden');
+        listView.classList.add('hidden');
+        historyView.classList.add('hidden');
         leaderboardView.classList.remove('hidden');
-        updateTypeSelectionBarVisibility();
+        shiftLogView.classList.add('hidden');
         renderLeaderboard();
       };
 
       tabShiftLog.onclick = () => {
-        if (!isEditor) return;
+        hideCallsignPopover();
         appState.viewMode = 'shiftLog';
-        [tabWorksheet, tabList, tabHistory, tabLeaderboard, tabShiftLog].forEach(t => t.classList.remove('active'));
         tabShiftLog.classList.add('active');
-        [worksheetView, listView, historyView, leaderboardView, shiftLogView].forEach(v => v.classList.add('hidden'));
+        tabWorksheet.classList.remove('active');
+        tabList.classList.remove('active');
+        tabHistory.classList.remove('active');
+        tabLeaderboard.classList.remove('active');
+
+        worksheetView.classList.add('hidden');
+        settingsBar.classList.add('hidden');
+        typeSelectionBar.classList.add('hidden');
+        listView.classList.add('hidden');
+        historyView.classList.add('hidden');
+        leaderboardView.classList.add('hidden');
         shiftLogView.classList.remove('hidden');
-        updateTypeSelectionBarVisibility();
         renderShiftLogs();
       };
     }
-
-    function renderListFilterButtons() {}
 
     window.addEventListener('DOMContentLoaded', () => {
       loadData();
       setupEventListeners();
       setupCallsignPopBtns();
       renderTypeButtons();
-      renderList();
-      initFirebaseSync();
+      renderWorksheet();
     });
   </script>
 </body>
